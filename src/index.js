@@ -1,30 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
-require('dotenv').config();
-
 const api = require('./api');
+const morgan = require('morgan');
 
-const limiter = rateLimit({
-    windowMs: 20 * 1000, // 30 seconds
-    max: 8 
-})
-
-const speedLimiter = slowDown({
-    windowMs: 20 * 1000, // 30 seconds
-    delayAfter: 1,
-    delayMs: 250
-})
+require('dotenv').config();
 
 const app = express();
 
+app.use(helmet());
 app.set('trust proxy', 1);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }))
 app.use(cors());
-app.use(helmet());
-app.use(limiter, speedLimiter);
+app.use(morgan('dev'))
 
 app.get('/', (req, res) => {
     res.json({ ok: true })

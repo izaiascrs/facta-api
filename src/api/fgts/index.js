@@ -42,17 +42,22 @@ router.get('/token', async (req, res) => {
 });
 
 router.post('/saldo', async (req, res) => {
-    const { cpf } = req.body;
+    
+    if(!apiCredentials?.token) await getToken(apiCredentials);
+    
+    const { cpf } = req.body;   
     const currentHour = new Date().getHours();
     const tokenExpiresHour = +apiCredentials?.expires?.split(':')[0];
-
-    if(!apiCredentials?.token) {
-        await getToken(apiCredentials);
-    }
+    const currentDay = new Date().toLocaleString('pt-br', { weekday: 'long' });
+    const expiresDay = new Date(apiCredentials.day).toLocaleString('pt-br', { weekday: 'long' });
 
     if(apiCredentials.token && currentHour >= +tokenExpiresHour ) {
         await getToken(apiCredentials);
+    } else if(apiCredentials.day && expiresDay !== currentDay ) {
+        console.log(true);
+        await getToken(apiCredentials);
     }
+    
 
     try {
         const { data } = await axios.get(`${process.env.FACTA_BASE_URL}/fgts/saldo?cpf=${cpf}`, {
@@ -144,10 +149,10 @@ router.post('/simulate/create', async (req, res) => {
 })
 
 router.post('/user/create', async (req, res) => {
-    const data = req.body;
+    const userData = req.body;
     const formData = new FormData();
     const headers = { headers: { 'Authorization': `Bearer ${apiCredentials?.token}` }};
-    Object.entries(data).forEach(([key, value]) => formData.append(key, value));
+    Object.entries(userData).forEach(([key, value]) => formData.append(key, value));
     
     try {
         const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa2-dados-pessoais`, formData, headers);
@@ -155,7 +160,7 @@ router.post('/user/create', async (req, res) => {
         return res.json(data);
     } catch (error) {
         console.log(error);
-        return res.json({ message: 'não foi possivel concluir a operação'})
+        return res.json({ message: 'não foi possivel concluir a operação' })
     }
 })
 
@@ -165,20 +170,6 @@ router.post('/proposal/create', async (req, res) => {
     const formData = new FormData();
     const headers = { headers: { 'Authorization': `Bearer ${apiCredentials?.token}` }};
     Object.entries(apiData).forEach(([key, value]) => formData.append(key, value));
-
-    // const mockData = {
-    //     "erro": false,
-    //     "mensagem": "Proposta criada com sucesso",
-    //     "codigo": "53662881",
-    //     "url_formalizacao": "facta.ly/4e956e08"
-    // }
-
-    // await whatsappCreateUser({ first_name, last_name, phone });
-    // const id = await whatsappGetUserIdByPhone({ userPhone: phone });
-    // await fgtsSendFluxo({ userID: id });
-    // await fgtsSendWhatsappMessage({userID: id, contractLink: mockData.url_formalizacao });
-
-    // await sendWhatsAppLink({ codigo_af: mockData.codigo, apiCredentials });
 
     try {
         const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa3-proposta-cadastro`, formData, headers);
@@ -194,8 +185,6 @@ router.post('/proposal/create', async (req, res) => {
         console.log(error);
         return res.json({ message: 'não foi possivel concluir a operação'})
     }
-
-    // return res.json(mockData)
     
 })
 

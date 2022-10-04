@@ -1,7 +1,8 @@
 const axios = require('axios');
 const FormData = require('form-data');
+require('dotenv').config();
 
-const FGTS_HEADERS = { headers: { 'API-KEY': process.env.CONTA_LUZ_KEY } };
+const FGTS_HEADERS = { headers: { 'API-KEY': process.env.WHATSAPP_KEY } };
 
 async function getToken(apiCredentials) {
     try {
@@ -11,8 +12,10 @@ async function getToken(apiCredentials) {
             }
         });
 
+        const day = data.expira.split(' ')[0];
         apiCredentials.token = data.token;
         apiCredentials.expires = data.expira.split(' ')[1];
+        apiCredentials.day = day.split('/').reverse().join('/')
 
         return apiCredentials;
 
@@ -55,7 +58,7 @@ async function whatsappCreateUser ({ phone, first_name, last_name }) {
     const userInfo = { phone, first_name, last_name };
 
     try {
-        await axios.post(`${process.env.CONTA_LUZ_BASE_URL}/subscriber/`, userInfo, FGTS_HEADERS);
+        await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/`, userInfo, FGTS_HEADERS);
         return true;
     } catch (error) {
         console.log(error.message);        
@@ -66,7 +69,7 @@ async function whatsappCreateUser ({ phone, first_name, last_name }) {
 async function whatsappGetUserIdByPhone({ userPhone = '' }) {
     console.log(userPhone);
     try {
-        const { data } = await axios.get(`${process.env.CONTA_LUZ_BASE_URL}/subscriber/${userPhone}`, FGTS_HEADERS); 
+        const { data } = await axios.get(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userPhone}`, FGTS_HEADERS); 
         return data.id;
     } catch (error) {
         console.log(error.message);
@@ -78,7 +81,7 @@ async function whatsappGetUserIdByPhone({ userPhone = '' }) {
 async function fgtsSendFluxo({ userID = ''}) {    
     const flowInfo = { flow: 545495 };
     try {
-        await axios.post(`${process.env.CONTA_LUZ_BASE_URL}/subscriber/${userID}/send_flow/`, flowInfo, FGTS_HEADERS);
+        await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_flow/`, flowInfo, FGTS_HEADERS);
         return true;
     } catch (error) {
         console.log(error);
@@ -92,7 +95,7 @@ async function fgtsSendWhatsappMessage({ userID = '', contractLink = '' }) {
     const message = { "type": "text", "value": contractLink };
 
     try {
-        await axios.post(`${process.env.CONTA_LUZ_BASE_URL}/subscriber/${userID}/send_message/`, message, FGTS_HEADERS);
+        await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_message/`, message, FGTS_HEADERS);
         return true;
     } catch (error) {
         console.log(error.message);

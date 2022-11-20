@@ -4,22 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prod": "concurrently \"node src/index.js\" \"node src/verifyUsers.js\"",
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "cron": "node src/verifyUsers.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.27.2",
+    "concurrently": "^7.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
     "express-rate-limit": "^6.6.0",
     "express-slow-down": "^1.4.1",
     "form-data": "^4.0.0",
+    "google-spreadsheet": "^3.3.0",
     "helmet": "^6.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "node-cron": "^3.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.19"

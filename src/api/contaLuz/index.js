@@ -34,13 +34,21 @@ router.post('/user/create', async(req, res) => {
 })
 
 router.post('/user/create-v2', async(req, res) => {
-    const { firstName, lastName, phone, userMessageObj } = req.body;
+    let value;
+
+    const { firstName, lastName, phone, userMessageObj, offerId } = req.body;
+
+    console.log(offerId);
 
     await contaLuzCreateUser({ first_name: firstName, last_name: lastName , phone });
 
     const id = await contaLuzGetUserIdByPhone({ userPhone: phone });
 
-    const messageSend = await sendUserInfoMessage({ userID: id , messageObj: userMessageObj });
+    const valueAvailable = await contaLuzGetValues({ propostaId: offerId });
+
+    if(valueAvailable.valor) value = valueAvailable.valor;
+
+    const messageSend = await sendUserInfoMessage({ userID: id , messageObj: userMessageObj, valueAvailable: value });
 
     await contaLuzSendWhatsappFlow({ userID: id });
 
@@ -115,6 +123,32 @@ router.post('/create-proposal', async (req, res) => {
         console.log(error);
         return res.json({ message: 'Error' });
     }
-})
+});
+
+async function contaLuzGetValues ({ propostaId }) {
+    try {
+        const { data } = await axios.get(`${process.env.CREFAZ_BASE_URL}/api/proposta/oferta-produto/${propostaId}`, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+
+        console.log(data);
+
+        if(data.data) {
+            const energyProd = data.data.produtos.find((prod) => prod.nome === 'Energia');
+            const valueAvailable = energyProd.convenio[0].tabelaJuros[0].tabelaJurosValores[0];         
+            if(valueAvailable) return valueAvailable;
+            return 0;
+        }
+
+        return 0;
+        
+    } catch (error) {
+        console.log(error.message);
+        return 0;        
+    }
+
+}
 
 module.exports = router;

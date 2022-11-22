@@ -91,8 +91,6 @@ async function loadUsers () {
                 usersChecked[row.nome] = true;
         });
 
-        await rows[0].delete();
-
         if(usersData.length >= 200) {
             console.log('set max users 200');
             usersData = usersData.slice(0, 200);
@@ -173,11 +171,12 @@ async function sendMessage(message) {
         return true;
     } catch (error) {
         console.log(error.message);
+        console.log(error);
         return false;
     }
 }
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 10 * * *', async () => {
     let day = new Date().toLocaleDateString('pt-br', { weekday: 'long' });
     console.log('runing', new Date().toString());
     if(day === "sábado" || day === 'domingo') return;

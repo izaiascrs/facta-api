@@ -25,7 +25,6 @@ async function getToken(apiCredentials) {
     }
 }
 
-
 async function contaLuzCreateUser ({ phone, first_name, last_name }) {
     const userInfo = { phone, first_name, last_name };
 
@@ -60,7 +59,6 @@ async function contaLuzSendWhatsappMessage({ userID = ''}) {
     }
 }
 
-
 async function contaLuzSendWhatsappFlow({ userID = ''}) {
     const flowInfo = { flow: 585650 };
     try {
@@ -72,19 +70,20 @@ async function contaLuzSendWhatsappFlow({ userID = ''}) {
     }
 }
 
-async function sendUserInfoMessage({ messageObj = {} , userID = ''}) {
-    let message = 'Olá, obrigado por realizar a simulação no nosso site! \n\n*Seus Dados Cadastrados:*\n'
+async function sendUserInfoMessage({ messageObj = {} , userID = '', valueAvailable = 0 }) {
+    let message = 'Olá, obrigado por realizar a simulação no nosso site!';
+    if(valueAvailable > 0) message+= `\n*valor liberado*: ${formatNumberAsCurrency(valueAvailable)}`;    
+    message += '\n*Seus Dados Cadastrados*\n';
    
     for (key in messageObj) {
         message += `*${key}*` + ": " + messageObj[key] + "\n";
     }
-    message += '\n*Caso algum dado esteja errado por favor corrija!*' 
+    message += "\nConfira seus dados para evitar erros na simulação.\nHavendo informações incorretas, por gentileza nos informe antes de finalizarmos a simulação. \nimportante: *informações incosistents irão cancelar a simulação*." 
 
     const messageData = {
         "type": "text",
         "value": message,
     }
-
 
     console.log(messageData, userID);
 
@@ -97,5 +96,12 @@ async function sendUserInfoMessage({ messageObj = {} , userID = ''}) {
     }
 }
 
+function formatNumberAsCurrency(n) {
+    return Number(n).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      });
+}
 
-module.exports = { contaLuzCreateUser, contaLuzGetUserIdByPhone, contaLuzSendWhatsappMessage, getToken, sendUserInfoMessage, contaLuzSendWhatsappFlow };
+
+module.exports = { contaLuzCreateUser, contaLuzGetUserIdByPhone, contaLuzSendWhatsappMessage, getToken, sendUserInfoMessage, contaLuzSendWhatsappFlow, CONTA_LUZ_HEADERS };

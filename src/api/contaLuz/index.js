@@ -120,7 +120,11 @@ router.post('/create-proposal', async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
-        console.log(error);
+        if (error.response) {
+            res.status(error.response.status);
+            return res.json(error.response.data)
+        }
+        res.status(400);        
         return res.json({ message: 'Error' });
     }
 });
@@ -132,8 +136,6 @@ async function contaLuzGetValues ({ propostaId }) {
                 'Authorization': `Bearer ${apiCredentials?.token}`
             }
         });
-
-        console.log(data);
 
         if(data.data) {
             const energyProd = data.data.produtos.find((prod) => prod.nome === 'Energia');

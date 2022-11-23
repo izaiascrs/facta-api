@@ -72,13 +72,13 @@ async function contaLuzSendWhatsappFlow({ userID = ''}) {
 
 async function sendUserInfoMessage({ messageObj = {} , userID = '', valueAvailable = 0 }) {
     let message = 'Olá, obrigado por realizar a simulação no nosso site!';
-    if(valueAvailable > 0) message+= `\n*valor liberado*: ${formatNumberAsCurrency(valueAvailable)}`;    
+    if(valueAvailable > 0) message+= `\n*Valor pré-aprovado*: ${formatNumberAsCurrency(valueAvailable)}`;    
     message += '\n*Seus Dados Cadastrados*\n';
    
     for (key in messageObj) {
         message += `*${key}*` + ": " + messageObj[key] + "\n";
     }
-    message += "\nConfira seus dados para evitar erros na simulação.\nHavendo informações incorretas, por gentileza nos informe antes de finalizarmos a simulação. \nimportante: *informações incosistents irão cancelar a simulação*." 
+    message += "\nConfira seus dados para evitar erros na simulação.\nHavendo informações incorretas, por gentileza nos informe antes de finalizarmos a simulação. \nimportante: *informações incosistentes irão cancelar a simulação*." 
 
     const messageData = {
         "type": "text",

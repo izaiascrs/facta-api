@@ -120,6 +120,33 @@ router.post('/create-proposal', async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
+        console.log(error);
+        if (error.response) {
+            res.status(error.response.status);
+            return res.json(error.response.data)
+        }
+        res.status(400);        
+        return res.json({ message: 'Error' });
+    }
+});
+
+
+router.get('/offer/:id', async (req, res) => {
+    const { id } = req.params;
+   
+    try {
+        const { data } = await axios.get(`${process.env.CREFAZ_BASE_URL}/api/proposta/oferta-produto/${id}`, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+
+        console.log(data);
+
+        return res.json(data);
+
+    } catch (error) {
+        console.log(error.message);
         if (error.response) {
             res.status(error.response.status);
             return res.json(error.response.data)
@@ -150,7 +177,6 @@ async function contaLuzGetValues ({ propostaId }) {
         console.log(error.message);
         return 0;        
     }
-
 }
 
 module.exports = router;

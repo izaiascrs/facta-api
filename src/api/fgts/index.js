@@ -7,7 +7,8 @@ const {
     fgtsSendFluxo,
     fgtsSendWhatsappMessage,
     whatsappCreateUser,
-    whatsappGetUserIdByPhone 
+    whatsappGetUserIdByPhone,
+    notifyFgtsStatus
 } = require('../../functions/fgts'); 
 
 const router = express.Router();
@@ -42,7 +43,7 @@ router.get('/token', async (req, res) => {
 });
 
 router.post('/saldo', async (req, res) => {
-    
+        
     if(!apiCredentials?.token) await getToken(apiCredentials);
     
     const { cpf } = req.body;   
@@ -174,18 +175,23 @@ router.post('/proposal/create', async (req, res) => {
     try {
         const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa3-proposta-cadastro`, formData, headers);
         console.log(data);
-        
+
         await whatsappCreateUser({ first_name, last_name, phone });
         const id = await whatsappGetUserIdByPhone({ userPhone: phone });
         await fgtsSendFluxo({ userID: id });
-        await fgtsSendWhatsappMessage({userID: id, contractLink: data.url_formalizacao });
-        
+        await fgtsSendWhatsappMessage({userID: id, contractLink: data.url_formalizacao });      
+        await notifyFgtsStatus({ status: 'done', userID: 22826894, name: first_name });
         return res.json(data);
     } catch (error) {
         console.log(error);
         return res.json({ message: 'não foi possivel concluir a operação'})
-    }
-    
+    }    
+})
+
+router.post('/proposal/send-status', async (req, res) => {
+    const { name } = req.body;
+    await notifyFgtsStatus({ status: 'pending', userID: 22826894, name });
+    return res.json({ ok: true });
 })
 
 

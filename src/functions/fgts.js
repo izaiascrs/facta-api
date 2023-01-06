@@ -53,7 +53,6 @@ async function sendWhatsAppLink({ codigo_af= '', apiCredentials }) {
 
 }
 
-
 async function whatsappCreateUser ({ phone, first_name, last_name }) {
     const userInfo = { phone, first_name, last_name };
 
@@ -77,7 +76,6 @@ async function whatsappGetUserIdByPhone({ userPhone = '' }) {
 }
 
 
-
 async function fgtsSendFluxo({ userID = ''}) {    
     const flowInfo = { flow: 545495 };
     try {
@@ -88,7 +86,6 @@ async function fgtsSendFluxo({ userID = ''}) {
         return false;
     }
 }
-
 
 async function fgtsSendWhatsappMessage({ userID = '', contractLink = '' }) {    
     
@@ -103,6 +100,29 @@ async function fgtsSendWhatsappMessage({ userID = '', contractLink = '' }) {
     }
 }
 
+async function notifyFgtsStatus({ userID = '', status = 'done', name = '' }) {
+    // const userIDPhone = 22826894;
+    let message = '';
+    if(status === 'done') {
+        message += `O cliente ${name} concluiu a contratação do saque aniversário do facta!`;
+    } else {
+        message += `O cliente ${name} desistiu da contratação do saque aniversário do facta!`;
+    }
+
+    const messageData = {
+        "type": "text",
+        "value": message,
+    }
+
+    try {
+        await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_message/`, messageData, FGTS_HEADERS);
+        return true;
+    } catch (error) {
+        console.log(error.message);
+        return false;
+    }
+
+}
 
 module.exports = { 
     getToken,
@@ -110,5 +130,6 @@ module.exports = {
     fgtsSendFluxo,
     fgtsSendWhatsappMessage,
     whatsappCreateUser,
-    whatsappGetUserIdByPhone
+    whatsappGetUserIdByPhone,
+    notifyFgtsStatus
 };

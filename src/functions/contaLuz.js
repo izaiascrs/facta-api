@@ -12,9 +12,6 @@ async function getToken(apiCredentials) {
 
     try {
         const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/usuario/login`, userCredentials);
-
-        console.log(data);
-        
         const expiresDay = data.data.expires.split('T')[0];
         apiCredentials.token = data.data.token;
         apiCredentials.expires = expiresDay.replace(/-/g, '/');
@@ -40,7 +37,6 @@ async function contaLuzCreateUser ({ phone, first_name, last_name }) {
 }
 
 async function contaLuzGetUserIdByPhone({ userPhone = '' }) {
-    console.log(userPhone);
     try {
         const { data } = await axios.get(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userPhone}`, CONTA_LUZ_HEADERS); 
         return data.id;
@@ -105,5 +101,27 @@ function formatNumberAsCurrency(n) {
       });
 }
 
+function normalizeData(userInfoObj) {
+    return {
+        "cpf": userInfoObj.cpf,
+        "nome": userInfoObj.nome,
+        "nascimento": userInfoObj.nascimento,
+        "telefone": userInfoObj.telefone,
+        "ocupacaoId": userInfoObj.ocupacaoId,
+        "cidadeId": userInfoObj.citieID,
+        "bairro": userInfoObj.bairro,
+        "logradouro": userInfoObj.logradouro,
+        "urlNotificacaoParceiro": "https://smartwatchtec.com.br/api/conta-luz/acompanhamento",
+    }
+}
 
-module.exports = { contaLuzCreateUser, contaLuzGetUserIdByPhone, contaLuzSendWhatsappMessage, getToken, sendUserInfoMessage, contaLuzSendWhatsappFlow, CONTA_LUZ_HEADERS };
+module.exports = {
+    contaLuzCreateUser,
+    contaLuzGetUserIdByPhone,
+    contaLuzSendWhatsappMessage,
+    getToken,
+    sendUserInfoMessage,
+    contaLuzSendWhatsappFlow,
+    CONTA_LUZ_HEADERS,
+    normalizeData
+};

@@ -1,5 +1,7 @@
 const express = require('express');
 const axios = require('axios');
+const cities = require('../../../cities.json');
+
 const { 
     getToken,
     contaLuzCreateUser,
@@ -7,6 +9,7 @@ const {
     contaLuzSendWhatsappMessage,
     contaLuzSendWhatsappFlow,
     sendUserInfoMessage,
+	normalizeData
 } = require('../../functions/contaLuz');
 
 const router = express.Router();
@@ -297,8 +300,6 @@ router.post('/citie-available', async (req, res) => {
     const expiresDay = new Date(apiCredentials.expires)
 
     if(currentDay >= expiresDay) await getToken(apiCredentials);
-
-    console.log('token', apiCredentials.token)
     
     try {
         const { data } = await axios.get(`${process.env.CREFAZ_BASE_URL}/api/proposta/produtos-regiao/${citieID}`, {
@@ -319,6 +320,12 @@ router.post('/citie-available', async (req, res) => {
 
 router.post('/create-proposal', async (req, res) => {
     const userData = req.body;
+	const state = userData.estado;
+	const citie = userData.cidade;
+	const citieID = cities[state].find((city) => city?.nome === citie)?.id;
+	userData.citieID = citieID
+
+	const formatedData = normalizeData(userData);
    
     if(!apiCredentials?.token) await getToken(apiCredentials);
 
@@ -328,28 +335,27 @@ router.post('/create-proposal', async (req, res) => {
     if(currentDay >= expiresDay) await getToken(apiCredentials);
 
     try {
-        const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/proposta`, userData, {
+        const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/proposta`, formatedData, {
             headers: {
                 'Authorization': `Bearer ${apiCredentials?.token}`
             }
         });
 
-        console.log(data);
+        console.log({ apiRes: data });
 
         return res.json(data);
 
     } catch (error) {
         console.log(error.message);        
-        // if (error.response) {
-        //     res.status(error.response.status);
-        //     return res.json(error.response.data)
-        // }
-        // res.status(400);        
-        // return res.json({ message: 'Error' });
-        return res.json(createProposalMockData);
+        if (error.response) {
+            res.status(error.response.status);
+            return res.json(error.response.data)
+        }
+        res.status(400);        
+        return res.json({ message: 'Error' });
+        // return res.json(createProposalMockData);
     }
 });
-
 
 router.get('/offer/:id', async (req, res) => {
     const { id } = req.params;
@@ -360,8 +366,6 @@ router.get('/offer/:id', async (req, res) => {
                 'Authorization': `Bearer ${apiCredentials?.token}`
             }
         });
-
-        console.log(data);
 
         return res.json(data);
 

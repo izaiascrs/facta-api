@@ -233,6 +233,21 @@ const offerMockData = {
 	"errors": null
 }
 
+const productMockData = {
+	"success": true,
+	"data": {
+		"propostaId": 1004127737,
+		"aprovado": true
+	},
+	"errors": null
+}
+
+const imgUploadMockData = {
+	"success": true,
+	"data": "Upload Concluido",
+	"errors": null
+}
+
 router.get('/', (req, res) => {
     return res.json({ message: 'conta luz router ok!' });
 })
@@ -326,6 +341,8 @@ router.post('/create-proposal', async (req, res) => {
 	userData.citieID = citieID
 
 	const formatedData = normalizeData(userData);
+
+	console.log({ formatedData, userData });
    
     if(!apiCredentials?.token) await getToken(apiCredentials);
 
@@ -367,21 +384,91 @@ router.get('/offer/:id', async (req, res) => {
             }
         });
 
+		console.log('offer', data);
         return res.json(data);
 
+        // return res.json(offerMockData);
+
     } catch (error) {
-        console.log(error.message);
-        // if (error.response) {
-        //     res.status(error.response.status);
-        //     return res.json(error.response.data)
-        // }
-        // res.status(400);        
-        // return res.json({ message: 'Error' });
-        return res.json(offerMockData)
+        console.log('error', error.message);
+        if (error.response) {
+            res.status(error.response.status);
+            return res.json(error.response.data)
+        }		
+        res.status(400);        
+        return res.json({ message: 'Error' });
+        // return res.json(offerMockData)
     }
 });
 
+router.post('/due-date', async (req, res) => {
+	const { propostaId, produtoId, tabelaJurosId } = req.body;
+	const apiData = { propostaId, produtoId, tabelaJurosId }
+
+	try {
+        const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/Proposta/calculo-vencimento`, apiData, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+
+		console.log(data);
+        return res.json(data);
+
+    } catch (error) {
+		console.log(error);
+        if (error.response) {
+            res.status(error.response.status);
+            return res.json(error.response.data)
+        }
+        res.status(400);        
+        return res.json({ message: 'Error' });
+    }
+	
+})
+
+router.post('/product-offer', async (req, res) => {
+	const apiData = req.body;
+	const contaLuzImg = apiData.contaLuzImg;	
+	delete apiData.contaLuzImg;
+		
+
+	// return res.json(productMockData);
+		
+	try {
+        const { data } = await axios.put(`${process.env.CREFAZ_BASE_URL}/api/Proposta/oferta-produto/${apiData.id}`, apiData, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+
+		console.log('product', data);
+		return res.json(data);
+
+		// if(data.success && contaLuzImg) {
+		// 	console.log({ id: apiData.id, imgBase64: contaLuzImg });			
+		// 	return res.json(data);
+		// }
+    } catch (error) {
+		console.log(error);
+        if (error.response) {
+            res.status(error.response.status);
+            return res.json(error.response.data)
+        }
+        res.status(400);        
+        return res.json({ message: 'Error' });
+    }
+	
+})
+
+router.post('/acompanhamento', (req, res) => {
+	console.log('webhook', req.body);
+	return res.json({ ok: true });
+})
+
 async function contaLuzGetValues ({ propostaId }) {
+
+	// api/Proposta/oferta-produto
 
     try {
         const { data } = await axios.get(`${process.env.CREFAZ_BASE_URL}/api/proposta/oferta-produto/${propostaId}`, {
@@ -402,6 +489,33 @@ async function contaLuzGetValues ({ propostaId }) {
     } catch (error) {
         console.log(error.message);
         return 0;        
+    }
+}
+
+async function uploadContaLuzImage({ id = '', imgBase64 = '' } = {}) {
+	const apiData = { "documentoId": 48, "conteudo": imgBase64 };
+
+	console.log('img', apiData);
+	// return imgUploadMockData;
+
+	try {
+        const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/Proposta/${id}/imagem`, apiData, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+
+		console.log('upload', data);
+        return res.json(data);
+
+    } catch (error) {
+		console.log(error);
+        if (error.response) {
+            res.status(error.response.status);
+            return res.json(error.response.data)
+        }
+        res.status(400);        
+        return res.json({ message: 'Error' });
     }
 }
 

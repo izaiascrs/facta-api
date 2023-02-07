@@ -111,6 +111,7 @@ function normalizeData(userInfoObj) {
         "cidadeId": userInfoObj.citieID,
         "bairro": userInfoObj.bairro,
         "logradouro": userInfoObj.logradouro,
+        "cep":userInfoObj.cep,
         "urlNotificacaoParceiro": "https://smartwatchtec.com.br/api/conta-luz/acompanhamento",
     }
 }

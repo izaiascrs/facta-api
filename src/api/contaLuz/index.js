@@ -479,20 +479,18 @@ async function contaLuzGetValues ({ propostaId }) {
     }
 }
 
-router.get('/proposal/search/:cpf', async (req, res) => {
-	const { cpf } = req.params;
+router.get('/proposal/search/:id', async (req, res) => {
+	const { id } = req.params;
+	
 	try {
-		const userData = await searchProposalByCPF({ cpf });		
-		const proposalID = userData?.data?.propostaEmAndamento?.propostaId;
 
-		if(!proposalID) {
+		if(!id) {
 			res.status(404);
 			return res.json({ message: 'Proposal not found!'});
 		}
 
-		const data = await searchProposalByID({ proposalID });
-		console.log(data);
-		
+		const data = await searchProposalByID({ proposalID: id });
+
 		if(data.success) {
 			const resData = { 
 				id: data.data.proposta.id,
@@ -513,31 +511,7 @@ router.get('/proposal/search/:cpf', async (req, res) => {
 
 })
 
-async function uploadContaLuzImage({ id = '', imgBase64 = '' } = {}) {
-	const apiData = { "documentoId": 48, "conteudo": imgBase64 };
-
-	try {
-        const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/Proposta/${id}/imagem`, apiData, {
-            headers: {
-                'Authorization': `Bearer ${apiCredentials?.token}`
-            }
-        });
-
-        return res.json(data);
-
-    } catch (error) {
-		console.log(error);
-        if (error.response) {
-            res.status(error.response.status);
-            return res.json(error.response.data)
-        }
-        res.status(400);        
-        return res.json({ message: 'Error' });
-    }
-}
-
-async function searchProposalByCPF({ cpf = '' }) {
-
+async function searchProposalByID({ proposalID = '' }) {
 	if(!apiCredentials?.token) {
         await getToken(apiCredentials);
     }
@@ -546,30 +520,15 @@ async function searchProposalByCPF({ cpf = '' }) {
     const expiresDay = new Date(apiCredentials.expires)
 
     if(currentDay >= expiresDay) await getToken(apiCredentials);
-	try {
-        const { data } = await axios.get(`${process.env.CREFAZ_ON_URL}/Pessoa/preanalise/${cpf}`, {
-            headers: {
-                'Authorization': `Bearer ${apiCredentials?.token}`
-            }
-        });
 
-		console.log(data);
-
-		return data;
-        
-    } catch (error) {
-        console.log(error.message);
-        return error;        
-    }
-}
-
-async function searchProposalByID({ proposalID = '' }) {
 	try {
         const { data } = await axios.get(`${process.env.CREFAZ_BASE_URL}/api/proposta/${proposalID}`, {
             headers: {
                 'Authorization': `Bearer ${apiCredentials?.token}`
             }
         });
+
+		console.log(data);
 
 		return data;        
     } catch (error) {

@@ -341,8 +341,6 @@ router.post('/create-proposal', async (req, res) => {
 	userData.citieID = citieID
 
 	const formatedData = normalizeData(userData);
-
-	console.log({ formatedData, userData });
    
     if(!apiCredentials?.token) await getToken(apiCredentials);
 
@@ -357,8 +355,6 @@ router.post('/create-proposal', async (req, res) => {
                 'Authorization': `Bearer ${apiCredentials?.token}`
             }
         });
-
-        console.log({ apiRes: data });
 
         return res.json(data);
 
@@ -384,10 +380,7 @@ router.get('/offer/:id', async (req, res) => {
             }
         });
 
-		console.log('offer', data);
         return res.json(data);
-
-        // return res.json(offerMockData);
 
     } catch (error) {
         console.log('error', error.message);
@@ -412,7 +405,6 @@ router.post('/due-date', async (req, res) => {
             }
         });
 
-		console.log(data);
         return res.json(data);
 
     } catch (error) {
@@ -442,13 +434,8 @@ router.post('/product-offer', async (req, res) => {
             }
         });
 
-		console.log('product', data);
 		return res.json(data);
 
-		// if(data.success && contaLuzImg) {
-		// 	console.log({ id: apiData.id, imgBase64: contaLuzImg });			
-		// 	return res.json(data);
-		// }
     } catch (error) {
 		console.log(error);
         if (error.response) {
@@ -492,11 +479,42 @@ async function contaLuzGetValues ({ propostaId }) {
     }
 }
 
+router.get('/proposal/search/:cpf', async (req, res) => {
+	const { cpf } = req.params;
+	try {
+		const userData = await searchProposalByCPF({ cpf });		
+		const proposalID = userData?.data?.propostaEmAndamento?.propostaId;
+
+		if(!proposalID) {
+			res.status(404);
+			return res.json({ message: 'Proposal not found!'});
+		}
+
+		const data = await searchProposalByID({ proposalID });
+		console.log(data);
+		
+		if(data.success) {
+			const resData = { 
+				id: data.data.proposta.id,
+				status: data.data.proposta.situacaoDescricao,
+				name: data.data.proposta.cliente.nome
+			}
+			return res.json(resData);
+		} else {
+			res.status(404);
+			return res.json({ message: 'Proposal not found!' })
+		}
+
+	} catch (error) {
+		console.log(error);
+		res.status(500);
+		return res.json({ error: 'Something went wrong'});
+	}
+
+})
+
 async function uploadContaLuzImage({ id = '', imgBase64 = '' } = {}) {
 	const apiData = { "documentoId": 48, "conteudo": imgBase64 };
-
-	console.log('img', apiData);
-	// return imgUploadMockData;
 
 	try {
         const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/Proposta/${id}/imagem`, apiData, {
@@ -505,7 +523,6 @@ async function uploadContaLuzImage({ id = '', imgBase64 = '' } = {}) {
             }
         });
 
-		console.log('upload', data);
         return res.json(data);
 
     } catch (error) {
@@ -516,6 +533,48 @@ async function uploadContaLuzImage({ id = '', imgBase64 = '' } = {}) {
         }
         res.status(400);        
         return res.json({ message: 'Error' });
+    }
+}
+
+async function searchProposalByCPF({ cpf = '' }) {
+
+	if(!apiCredentials?.token) {
+        await getToken(apiCredentials);
+    }
+
+    const currentDay = new Date()
+    const expiresDay = new Date(apiCredentials.expires)
+
+    if(currentDay >= expiresDay) await getToken(apiCredentials);
+	try {
+        const { data } = await axios.get(`${process.env.CREFAZ_ON_URL}/Pessoa/preanalise/${cpf}`, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+
+		console.log(data);
+
+		return data;
+        
+    } catch (error) {
+        console.log(error.message);
+        return error;        
+    }
+}
+
+async function searchProposalByID({ proposalID = '' }) {
+	try {
+        const { data } = await axios.get(`${process.env.CREFAZ_BASE_URL}/api/proposta/${proposalID}`, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+
+		return data;        
+    } catch (error) {
+        console.log(error.message);
+        return error;        
     }
 }
 

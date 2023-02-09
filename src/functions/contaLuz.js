@@ -83,7 +83,24 @@ async function sendUserInfoMessage({ messageObj = {} , userID = '', valueAvailab
         "value": message,
     }
 
-    console.log(messageData, userID);
+    try {
+        await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_message/`, messageData, CONTA_LUZ_HEADERS);
+        return true;
+    } catch (error) {
+        console.log(error.message);
+        return false;
+    }
+}
+
+async function sendProposalIDAndLinkMessage({ proposalID = 0 , userID = '', name = '' }) {
+    const BASE_URL = 'https://www.isocredconfiance.com.br/emprestimo-na-conta-de-energia';
+    let message = `Olá ${name}, esse é ID da sua simulação *${proposalID}*, `;
+        message += `utilize seu ID para acompanhar o andamento da sua simulação acessando o link abaixo 👇👇 \n ${BASE_URL}?id=${proposalID}#search`;
+    
+    const messageData = {
+        "type": "text",
+        "value": message,
+    }
 
     try {
         await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_message/`, messageData, CONTA_LUZ_HEADERS);
@@ -124,5 +141,6 @@ module.exports = {
     sendUserInfoMessage,
     contaLuzSendWhatsappFlow,
     CONTA_LUZ_HEADERS,
-    normalizeData
+    normalizeData,
+    sendProposalIDAndLinkMessage
 };

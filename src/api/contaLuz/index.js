@@ -9,7 +9,8 @@ const {
     contaLuzSendWhatsappMessage,
     contaLuzSendWhatsappFlow,
     sendUserInfoMessage,
-	normalizeData
+	normalizeData,
+	sendProposalIDAndLinkMessage
 } = require('../../functions/contaLuz');
 
 const router = express.Router();
@@ -293,6 +294,24 @@ router.post('/user/create-v2', async(req, res) => {
     res.status(401);
     return res.json({ message: 'unable to send message' });
 })
+
+router.post('/send-link', async (req, res) => {
+	const { firstName, lastName, phone, offerId } = req.body;
+
+	await contaLuzCreateUser({ first_name: firstName, last_name: lastName , phone });		
+	
+	const id = await contaLuzGetUserIdByPhone({ userPhone: phone });
+	
+	const messageSend = await sendProposalIDAndLinkMessage({ name: firstName, proposalID: offerId, userID: id });
+	
+	if(!messageSend) {
+		res.status(401);
+		return res.json({ message: 'unable to send message' });
+	} 
+
+	return res.json({ message: 'message sent'});
+})
+
 
 router.get('/token', async (req, res) => {
     try {

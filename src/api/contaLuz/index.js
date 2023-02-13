@@ -1,5 +1,9 @@
 const express = require('express');
 const axios = require('axios');
+const multer = require('multer');
+const { uploadQueue, googleSheetQueue } = require('../../lib/Queue');
+
+const multerConfig = require('../../config/multer');
 const cities = require('../../../cities.json');
 
 const { 
@@ -312,7 +316,6 @@ router.post('/send-link', async (req, res) => {
 	return res.json({ message: 'message sent'});
 })
 
-
 router.get('/token', async (req, res) => {
     try {
         await getToken(apiCredentials);
@@ -360,6 +363,8 @@ router.post('/create-proposal', async (req, res) => {
 	userData.citieID = citieID
 
 	const formatedData = normalizeData(userData);
+
+	console.log({formatedData});
    
     if(!apiCredentials?.token) await getToken(apiCredentials);
 
@@ -465,6 +470,23 @@ router.post('/product-offer', async (req, res) => {
         return res.json({ message: 'Error' });
     }
 	
+})
+
+router.post('/image/upload', multer(multerConfig).array("images", 3), async (req, res) => {		
+	const today = new Date().toLocaleDateString({ language: 'pt-br' });
+	const { files } = req
+	const { nome, cpf, nascimento, whats, email, status, data = today } = req.body;
+	const fileInfo = { files, folderName: nome }
+	const userData = { nome, cpf, nascimento, whats, email, status, data }
+
+	if(!files.length) {
+		googleSheetQueue.add({ userData, hasImage: false });		
+	} else {
+		await uploadQueue.add({ fileInfo, userData, hasImage: true });
+	}
+
+	res.json({ ok: true });
+
 })
 
 router.post('/acompanhamento', (req, res) => {

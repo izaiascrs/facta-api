@@ -6,13 +6,9 @@ async function saveUserToGoogleSheet({ userData, hasImage }) {
     await doc.useServiceAccountAuth(creds);
     await doc.loadInfo();
     const index = hasImage ? 1 : 0;
-    const sheet = doc.sheetsByIndex[index]; 
-        
-    try {
-        await sheet.addRow(userData);
-    } catch (error) {
-        console.log(error);        
-    }
+    const sheet = doc.sheetsByIndex[index];         
+    await sheet.addRow(userData);
+    
 }
 
 

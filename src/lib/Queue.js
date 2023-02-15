@@ -13,10 +13,6 @@ const googleSheetQueue = new Queue(saveUserToGoogleSheetsJob.key, redisConfig);
 
 const updateUserQueue = new Queue(updateUserJob.key, redisConfig);
 
-uploadQueue.on('failed', (job) => {
-    console.log('job failed', job.data);
-})
-
 uploadQueue.on('completed', async (job) => {
     job.data.fileInfo.files.forEach(file => {
         fs.unlink(file.path, (error) => {
@@ -30,8 +26,16 @@ uploadQueue.on('completed', async (job) => {
     googleSheetQueue.add({ userData: job.data.userData, hasImage: job.data.hasImage  });
 })
 
+uploadQueue.on('failed', (job) => {
+    console.log('job failed', job.data);
+})
+
 googleSheetQueue.on('completed', (job) => {
-    // console.log('sheet completed', job);
+    console.log('sheet completed', job.data);
+})
+
+googleSheetQueue.on('failed', (job) => {
+    console.log('sheet failed', job.data);
 })
 
 updateUserQueue.on('completed', (job) => {

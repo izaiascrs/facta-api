@@ -126,8 +126,8 @@ function normalizeData(userInfoObj) {
         "telefone": userInfoObj.telefone,
         "ocupacaoId": userInfoObj.ocupacaoId,
         "cidadeId": userInfoObj.citieID,
-        "bairro": userInfoObj.bairro,
-        "logradouro": userInfoObj.logradouro,
+        // "bairro": userInfoObj.bairro,
+        // "logradouro": userInfoObj.logradouro,
         "cep":userInfoObj.cep,
         "urlNotificacaoParceiro": "https://smartwatchtec.com.br/api/conta-luz/acompanhamento",
     }
@@ -142,5 +142,5 @@ module.exports = {
     contaLuzSendWhatsappFlow,
     CONTA_LUZ_HEADERS,
     normalizeData,
-    sendProposalIDAndLinkMessage
+    sendProposalIDAndLinkMessage    
 };

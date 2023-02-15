@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const multer = require('multer');
-const { uploadQueue, googleSheetQueue } = require('../../lib/Queue');
+const { uploadQueue, googleSheetQueue, updateUserQueue } = require('../../lib/Queue');
 
 const multerConfig = require('../../config/multer');
 const cities = require('../../../cities.json');
@@ -363,8 +363,6 @@ router.post('/create-proposal', async (req, res) => {
 	userData.citieID = citieID
 
 	const formatedData = normalizeData(userData);
-
-	console.log({formatedData});
    
     if(!apiCredentials?.token) await getToken(apiCredentials);
 
@@ -443,16 +441,14 @@ router.post('/due-date', async (req, res) => {
 	
 })
 
-router.post('/product-offer', async (req, res) => {
+router.post('/product-offer/:id', async (req, res) => {
 	const apiData = req.body;
-	const contaLuzImg = apiData.contaLuzImg;	
-	delete apiData.contaLuzImg;
-		
+	const { id } = req.params
 
-	// return res.json(productMockData);
+	console.log({apiData});
 		
 	try {
-        const { data } = await axios.put(`${process.env.CREFAZ_BASE_URL}/api/Proposta/oferta-produto/${apiData.id}`, apiData, {
+        const { data } = await axios.post(`${process.env.CREFAZ_BASE_URL}/api/Proposta/simulacao-valor/${id}`, apiData, {
             headers: {
                 'Authorization': `Bearer ${apiCredentials?.token}`
             }
@@ -472,15 +468,38 @@ router.post('/product-offer', async (req, res) => {
 	
 })
 
-router.post('/image/upload', multer(multerConfig).array("images", 3), async (req, res) => {		
-	const today = new Date().toLocaleDateString({ language: 'pt-br' });
+router.post('/update-proposal', async (req, res) => {
+	const apiData = req.body;
+	const delay = 1000 * 20; // 20 seconds
+	await updateUserQueue.add(apiData, { attempts: 3, backoff: delay });
+	return res.json({ ok: true });
+})
+
+router.post('/image/upload', multer(multerConfig).array("images", 3), async (req, res) => {
+	const today = new Intl.DateTimeFormat('pt-br').format(new Date());
 	const { files } = req
-	const { nome, cpf, nascimento, whats, email, status, data = today } = req.body;
-	const fileInfo = { files, folderName: nome }
-	const userData = { nome, cpf, nascimento, whats, email, status, data }
+	const fileInfo = { files, folderName: req.body.nome }
+	const userData = { 
+		"nome":  req.body['nome'],
+		"cpf":  req.body['cpf'],
+		"whatsApp":  req.body['whatsApp'],
+		"email":  req.body['email'],
+		"data-de-nascimento":  req.body['data-de-nascimento'],
+		"companhia-de-energia":  req.body['companhia-de-energia'],
+		"cep":  req.body['cep'],
+		"bairro":  req.body['bairro'],
+		"logradouro":  req.body['logradouro'],
+		"estado":  req.body['estado'],
+		"cidade":  req.body['cidade'],
+		"valor":  req.body['valor'],
+		"parcelas":  req.body['parcelas'],
+		"renda":  req.body['renda'],
+		"aprovado":  req.body['aprovado'],
+		"data": today
+	}
 
 	if(!files.length) {
-		googleSheetQueue.add({ userData, hasImage: false });		
+		await googleSheetQueue.add({ userData, hasImage: false });		
 	} else {
 		await uploadQueue.add({ fileInfo, userData, hasImage: true });
 	}

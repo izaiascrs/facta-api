@@ -3,9 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
 
-const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID
-const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET
-const REFRESH_TOKEN = process.env.GOOGLE_DRIVE_REFRESH_TOKEN
+const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
+const REFRESH_TOKEN = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+const FOLDER_PARENT_ID = process.env.GOOGLE_DRIVE_FOLDER_PARENT_ID;
 
 async function uploadImageToDrive({ filesArray, folderName = 'conta-luz-client-image', userData = {} }) {
 
@@ -22,6 +23,7 @@ async function uploadImageToDrive({ filesArray, folderName = 'conta-luz-client-i
     const fileMetadata = {
         name: folderName,
         mimeType: 'application/vnd.google-apps.folder',
+        parents: [FOLDER_PARENT_ID],
     };
 
     const folder = await drive.files.create({

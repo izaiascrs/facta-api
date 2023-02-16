@@ -20,6 +20,17 @@ const {
 const router = express.Router();
 const apiCredentials = {};
 
+const delay = 1000 * 20; // 20 seconds
+
+const options = {
+	month: '2-digit',
+	day: '2-digit',
+	year: 'numeric',
+	hour: '2-digit',	
+	minute: '2-digit'
+}
+const today = new Intl.DateTimeFormat('pt-br',options).format(new Date());
+
 const mockDataCitieAvailable = {
 	"success": true,
 	"data": {
@@ -470,13 +481,11 @@ router.post('/product-offer/:id', async (req, res) => {
 
 router.post('/update-proposal', async (req, res) => {
 	const apiData = req.body;
-	const delay = 1000 * 20; // 20 seconds
 	await updateUserQueue.add(apiData, { attempts: 3, backoff: delay });
 	return res.json({ ok: true });
 })
 
 router.post('/image/upload', multer(multerConfig).array("images", 3), async (req, res) => {
-	const today = new Intl.DateTimeFormat('pt-br').format(new Date());
 	const { files } = req
 	const fileInfo = { files, folderName: req.body.nome }
 	const userData = { 
@@ -499,7 +508,7 @@ router.post('/image/upload', multer(multerConfig).array("images", 3), async (req
 	}
 
 	if(!files.length) {
-		await googleSheetQueue.add({ userData, hasImage: false });		
+		await googleSheetQueue.add({ userData, hasImage: false }, { attempts: 3, backoff: delay });		
 	} else {
 		await uploadQueue.add({ fileInfo, userData, hasImage: true });
 	}

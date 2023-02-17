@@ -488,6 +488,7 @@ router.post('/update-proposal', async (req, res) => {
 router.post('/image/upload', multer(multerConfig).array("images", 3), async (req, res) => {
 	const { files } = req
 	const fileInfo = { files, folderName: req.body.nome }
+	const valor = req.body['valor']?.replace(/\D/g, '');
 	const userData = { 
 		"nome":  req.body['nome'],
 		"cpf":  req.body['cpf'],
@@ -500,11 +501,12 @@ router.post('/image/upload', multer(multerConfig).array("images", 3), async (req
 		"logradouro":  req.body['logradouro'],
 		"estado":  req.body['estado'],
 		"cidade":  req.body['cidade'],
-		"valor":  req.body['valor'],
+		"valor": valor,
 		"parcelas":  req.body['parcelas'],
 		"renda":  req.body['renda'],
 		"aprovado":  req.body['aprovado'],
-		"data": today
+		"timestamp": today,
+		"instalação": req.body['instalacao']
 	}
 
 	if(!files.length) {

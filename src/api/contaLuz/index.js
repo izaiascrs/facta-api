@@ -311,13 +311,13 @@ router.post('/user/create-v2', async(req, res) => {
 })
 
 router.post('/send-link', async (req, res) => {
-	const { firstName, lastName, phone, offerId } = req.body;
+	const { firstName, lastName, phone, offerId, page } = req.body;
 
 	await contaLuzCreateUser({ first_name: firstName, last_name: lastName , phone });		
 	
 	const id = await contaLuzGetUserIdByPhone({ userPhone: phone });
 	
-	const messageSend = await sendProposalIDAndLinkMessage({ name: firstName, proposalID: offerId, userID: id });
+	const messageSend = await sendProposalIDAndLinkMessage({ name: firstName, proposalID: offerId, userID: id, page });
 	
 	if(!messageSend) {
 		res.status(401);

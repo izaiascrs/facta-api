@@ -92,8 +92,8 @@ async function sendUserInfoMessage({ messageObj = {} , userID = '', valueAvailab
     }
 }
 
-async function sendProposalIDAndLinkMessage({ proposalID = 0 , userID = '', name = '' }) {
-    const BASE_URL = 'https://www.isocredconfiance.com.br/emprestimo-na-conta-de-energia';
+async function sendProposalIDAndLinkMessage({ proposalID = 0 , userID = '', name = '', page = '' }) {
+    const BASE_URL = page || 'https://www.isocredconfiance.com.br/emprestimo-na-conta-de-energia';
     let message = `Olá ${name}, esse é ID da sua simulação *${proposalID}*, `;
         message += `utilize seu ID para acompanhar o andamento da sua simulação acessando o link abaixo 👇👇 \n ${BASE_URL}?id=${proposalID}#search`;
     

@@ -481,14 +481,16 @@ router.post('/product-offer/:id', async (req, res) => {
 
 router.post('/update-proposal', async (req, res) => {
 	const apiData = req.body;
-	await updateUserQueue.add(apiData, { attempts: 3, backoff: delay });
+	await updateUserQueue.add(apiData, { attempts: 1, backoff: delay });
 	return res.json({ ok: true });
 })
 
 router.post('/image/upload', multer(multerConfig).array("images", 3), async (req, res) => {
 	const { files } = req
 	const fileInfo = { files, folderName: req.body.nome }
+
 	const valor = req.body['valor']?.replace(/\D/g, '');
+
 	const userData = { 
 		"nome":  req.body['nome'],
 		"cpf":  req.body['cpf'],
@@ -506,7 +508,7 @@ router.post('/image/upload', multer(multerConfig).array("images", 3), async (req
 		"renda":  req.body['renda'],
 		"aprovado":  req.body['aprovado'],
 		"timestamp": today,
-		"instalação": req.body['instalacao']
+		"instalação": req.body['instalacao'],		
 	}
 
 	if(!files.length) {

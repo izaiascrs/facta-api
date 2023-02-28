@@ -29,7 +29,6 @@ const options = {
 	hour: '2-digit',	
 	minute: '2-digit'
 }
-const today = new Intl.DateTimeFormat('pt-br',options).format(new Date());
 
 const mockDataCitieAvailable = {
 	"success": true,
@@ -488,6 +487,7 @@ router.post('/update-proposal', async (req, res) => {
 router.post('/image/upload', multer(multerConfig).array("images", 3), async (req, res) => {
 	const { files } = req
 	const fileInfo = { files, folderName: req.body.nome }
+	const today = new Intl.DateTimeFormat('pt-br',options).format(new Date());
 
 	const valor = req.body['valor']?.replace(/\D/g, '');
 

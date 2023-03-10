@@ -3,21 +3,22 @@ const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
 
-const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
-const REFRESH_TOKEN = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
 const FOLDER_PARENT_ID = process.env.GOOGLE_DRIVE_FOLDER_PARENT_ID;
 
 async function uploadImageToDrive({ filesArray, folderName = 'conta-luz-client-image', userData = {} }) {
-
-    if(!filesArray.length) return; 
-
-    const oauth = new google.auth.OAuth2( CLIENT_ID, CLIENT_SECRET );
-    oauth.setCredentials({ refresh_token: REFRESH_TOKEN });
+    if(!filesArray.length) return;         
+    const auth = new google.auth.GoogleAuth({
+        keyFile: './src/config/cred.json',
+        scopes: [
+            'https://www.googleapis.com/auth/cloud-platform',
+            'https://www.googleapis.com/auth/drive',           
+            
+        ],
+    });
 
     const drive = google.drive({
         version: "v3",
-        auth: oauth,        
+        auth       
     })
 
     const fileMetadata = {

@@ -521,7 +521,7 @@ router.post('/image/upload', multer(multerConfig).array("images", 3), async (req
 
 })
 
-router.post('/acompanhamento', (req, res) => {
+router.post('/acompanhamento', async (req, res) => {	
 	console.log('webhook', req.body);
 	return res.json({ ok: true });
 })
@@ -585,6 +585,7 @@ router.get('/proposal/search/:id', async (req, res) => {
 })
 
 async function searchProposalByID({ proposalID = '' }) {
+	console.log({ proposalID });
 	if(!apiCredentials?.token) {
         await getToken(apiCredentials);
     }

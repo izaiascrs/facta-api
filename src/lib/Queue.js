@@ -31,7 +31,8 @@ uploadQueue.on('completed', (job) => {
     googleSheetQueue.add({ userData: job.data.userData, hasImage: job.data.hasImage  }, { attempts: 3, backoff: delay });
 })
 
-uploadQueue.on('failed', (job) => {
+uploadQueue.on('failed', (job, error) => {
+    console.log(error);
     console.log('job failed', job.data);
 })
 

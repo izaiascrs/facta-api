@@ -76,7 +76,7 @@ async function sendUserInfoMessage({ messageObj = {} , userID = '', valueAvailab
     for (key in messageObj) {
         message += `*${key}*` + ": " + messageObj[key] + "\n";
     }
-    message += "\nConfira seus dados para evitar erros na simulação.\nHavendo informações incorretas, por gentileza nos informe antes de finalizarmos a simulação. \nimportante: *informações incosistentes irão cancelar a simulação*." 
+    message += "\nConfira seus dados para evitar erros na simulação.\nHavendo informações incorretas, por gentileza nos informe antes de finalizarmos a simulação. \nImportante: *informações inconsistentes irão cancelar a simulação*." 
 
     const messageData = {
         "type": "text",

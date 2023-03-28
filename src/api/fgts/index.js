@@ -153,9 +153,10 @@ router.post('/user/create', async (req, res) => {
     const userData = req.body;
     const formData = new FormData();
     const headers = { headers: { 'Authorization': `Bearer ${apiCredentials?.token}` }};
-    Object.entries(userData).forEach(([key, value]) => formData.append(key, value));
     
     try {
+        console.log({userData})
+        Object.entries(userData).forEach(([key, value]) => formData.append(key, value));
         const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa2-dados-pessoais`, formData, headers);
         console.log(data);
         return res.json(data);
@@ -170,9 +171,10 @@ router.post('/proposal/create', async (req, res) => {
     const apiData = { id_simulador, codigo_cliente };
     const formData = new FormData();
     const headers = { headers: { 'Authorization': `Bearer ${apiCredentials?.token}` }};
-    Object.entries(apiData).forEach(([key, value]) => formData.append(key, value));
-
+    
     try {
+        console.log({ apiData });
+        Object.entries(apiData).forEach(([key, value]) => formData.append(key, value));
         const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa3-proposta-cadastro`, formData, headers);
         console.log(data);
 
@@ -190,6 +192,7 @@ router.post('/proposal/create', async (req, res) => {
 
 router.post('/proposal/send-status', async (req, res) => {
     const { name } = req.body;
+    console.log({ name });
     await notifyFgtsStatus({ status: 'pending', userID: 22826894, name });
     return res.json({ ok: true });
 })

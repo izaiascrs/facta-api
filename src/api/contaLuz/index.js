@@ -14,7 +14,9 @@ const {
     contaLuzSendWhatsappFlow,
     sendUserInfoMessage,
 	normalizeData,
-	sendProposalIDAndLinkMessage
+	sendProposalIDAndLinkMessage,
+	createUserForBot,
+	sendBotMessage
 } = require('../../functions/contaLuz');
 
 const router = express.Router();
@@ -42,224 +44,6 @@ const mockDataCitieAvailable = {
 			"cp_cheque": true
 		}
 	},
-	"errors": null
-}
-
-const createProposalMockData = {
-	"success": true,
-	"data": {
-		"propostaId": 5175046
-	},
-	"errors": null
-}
-
-const offerMockData = {
-	"success": true,
-	"data": {
-		"produtos": [
-			{
-				"id": 1,
-				"nome": "Boleto",
-				"tabelaJuros": [
-					{
-						"id": 1,
-						"nome": "Tabela Boleto Padrão",
-						"tabelaJurosValores": [
-							{
-								"id": 8,
-								"plano": 8,
-								"juros": 15
-							},
-							{
-								"id": 9,
-								"plano": 9,
-								"juros": 15
-							},
-							{
-								"id": 11,
-								"plano": 11,
-								"juros": 15
-							},
-							{
-								"id": 12,
-								"plano": 12,
-								"juros": 15
-							},
-							{
-								"id": 2523,
-								"plano": 19,
-								"juros": 15
-							},
-							{
-								"id": 2524,
-								"plano": 20,
-								"juros": 15
-							},
-							{
-								"id": 2525,
-								"plano": 21,
-								"juros": 15
-							},
-							{
-								"id": 2526,
-								"plano": 22,
-								"juros": 15
-							},
-							{
-								"id": 2527,
-								"plano": 23,
-								"juros": 15
-							},
-							{
-								"id": 2528,
-								"plano": 24,
-								"juros": 15
-							},
-							{
-								"id": 2983,
-								"plano": 13,
-								"juros": 15
-							},
-							{
-								"id": 2984,
-								"plano": 14,
-								"juros": 15
-							},
-							{
-								"id": 2985,
-								"plano": 15,
-								"juros": 15
-							},
-							{
-								"id": 2986,
-								"plano": 16,
-								"juros": 15
-							},
-							{
-								"id": 2987,
-								"plano": 17,
-								"juros": 15
-							},
-							{
-								"id": 2988,
-								"plano": 18,
-								"juros": 15
-							}
-						]
-					}
-				],
-				"convenio": []
-			},
-			{
-				"id": 6,
-				"nome": "Energia",
-				"tabelaJuros": [],
-				"convenio": [
-					{
-						"id": 4,
-						"nome": "ENEL GO",
-						"convenioDados": [
-							{
-								"convenioDadosId": 18,
-								"convenioId": 4,
-								"nome": "N° da instalação",
-								"tipo": 1,
-								"ordem": 1,
-								"formato": "^([0]\\d{1,13}|[1-9]\\d{0,13})$",
-								"mensagem": "N° da instalação inválido. Informe o N° da instalação."
-							},
-							{
-								"convenioDadosId": 24,
-								"convenioId": 4,
-								"nome": "Data de Leitura",
-								"tipo": 4,
-								"ordem": 2,
-								"mensagem": "Data inválida"
-							},
-							{
-								"convenioDadosId": 22038,
-								"convenioId": 4,
-								"nome": "Data de Vencimento",
-								"tipo": 4,
-								"ordem": 3,
-								"mensagem": "Data inválida"
-							}
-						],
-						"tabelaJuros": [
-							{
-								"id": 2,
-								"nome": "Tabela Energia Padrão",
-								"tabelaJurosValores": [
-									{
-										"valor": 1200
-									},
-									{
-										"valor": 1100
-									},
-									{
-										"valor": 1000
-									},
-									{
-										"valor": 900
-									},
-									{
-										"valor": 800
-									},
-									{
-										"valor": 700
-									},
-									{
-										"valor": 600
-									},
-									{
-										"valor": 500
-									},
-									{
-										"valor": 450
-									},
-									{
-										"valor": 400
-									},
-									{
-										"valor": 350
-									},
-									{
-										"valor": 300
-									},
-									{
-										"valor": 250
-									},
-									{
-										"valor": 200
-									}
-								]
-							}
-						]
-					}
-				]
-			}
-		],
-		"proposta": {
-			"nome": "izaias caio ribeiro silva",
-			"cpf": "05671181186",
-			"valorRendaPresumida": 1254.76
-		}
-	},
-	"errors": null
-}
-
-const productMockData = {
-	"success": true,
-	"data": {
-		"propostaId": 1004127737,
-		"aprovado": true
-	},
-	"errors": null
-}
-
-const imgUploadMockData = {
-	"success": true,
-	"data": "Upload Concluido",
 	"errors": null
 }
 
@@ -398,7 +182,6 @@ router.post('/create-proposal', async (req, res) => {
         }
         res.status(400);        
         return res.json({ message: 'Error' });
-        // return res.json(createProposalMockData);
     }
 });
 
@@ -523,15 +306,6 @@ router.post('/image/upload', multer(multerConfig).array("images", 3), async (req
 
 router.post('/acompanhamento', async (req, res) => {	
 	console.log('webhook', req.body);
-	// const { propostaId, situacaoDescricao } = req.body;
-
-	// if(situacaoDescricao === 'Aguard. Cadastro') {
-	// 	const proposal = await searchProposalByID({ proposalID: propostaId });
-	// 	if(proposal.success) {
-	// 		const proposalInfo = getProposalValues(proposal);
-	// 		console.log(proposalInfo);
-	// 	}
-	// }
 	
 	return res.json({ ok: true });
 })
@@ -620,11 +394,15 @@ async function searchProposalByID({ proposalID = '' }) {
     }
 }
 
-function getProposalValues(proposalData) {
-	const { cliente, contatos } = proposalData.data.proposta;
-	const name = cliente?.nome;
-	const phone = contatos?.contato?.telefone;
-	return { name, phone }
-}
+router.post('/bot-message', async (req, res) => {
+	const { first_name, last_name, phone, valueAvailable } = req.body;
+	const userData = await createUserForBot({ first_name, last_name, phone })
+
+	if(!userData) return res.status(400).json({ message: 'Unable to send message' });
+
+	await sendBotMessage({first_name, userID: userData.data.id, valueAvailable })
+
+	return res.json({ message: 'Bot message sent' });
+})
 
 module.exports = router;

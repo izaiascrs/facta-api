@@ -45,8 +45,7 @@ async function contaLuzGetUserIdByPhone({ userPhone = '' }) {
     }
 }
 
-async function contaLuzSendWhatsappMessage({ userID = ''}) {
-    console.log({ userID });
+async function contaLuzSendWhatsappMessage({ userID = ''}) {    
     const flowInfo = { flow: 446029 };
     try {
         await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_flow/`, flowInfo, CONTA_LUZ_HEADERS);
@@ -133,6 +132,40 @@ function normalizeData(userInfoObj) {
     }
 }
 
+async function createUserForBot({ phone, first_name, last_name }) {
+    const userInfo = { phone, first_name, last_name };
+
+    try {
+        const data = await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/`, userInfo, CONTA_LUZ_HEADERS);
+        if(data) return data;
+        return false;
+    } catch (error) {
+        console.log(error.message);        
+        return false;
+    }
+}
+
+
+async function sendBotMessage({ userID = '', valueAvailable = 900, first_name='' }) {
+    first_name = first_name?.toLocaleLowerCase();
+    let message = `Boa tarde ${first_name}, tudo bem? \nEstou passando para informar que seu crédito de até *${formatNumberAsCurrency(valueAvailable)}* está preste a expirar aqui na Confiance.\nAproveite essa oferta exclusiva e me chame agora mesmo! \n\nTer *${formatNumberAsCurrency(valueAvailable)}* na sua conta te ajudaria?`;
+
+   
+    const messageData = {
+        "type": "text",
+        "value": message,
+    }
+
+    try {
+        await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_message/`, messageData, CONTA_LUZ_HEADERS);
+        return true;
+    } catch (error) {
+        console.log(error.message);
+        return false;
+    }
+}
+
+
 module.exports = {
     contaLuzCreateUser,
     contaLuzGetUserIdByPhone,
@@ -142,5 +175,7 @@ module.exports = {
     contaLuzSendWhatsappFlow,
     CONTA_LUZ_HEADERS,
     normalizeData,
-    sendProposalIDAndLinkMessage    
+    sendProposalIDAndLinkMessage,
+    createUserForBot,
+    sendBotMessage
 };

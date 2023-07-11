@@ -149,7 +149,7 @@ async function createUserForBot({ phone, first_name, last_name }) {
 async function sendBotMessage({ userID = '', valueAvailable = 900, first_name='' }) {
     first_name = first_name[0]?.toUpperCase() + first_name?.slice(1);
 
-    let message = `Boa tarde ${first_name}, tudo bem? \nEstou passando para informar que seu crédito de até *${formatNumberAsCurrency(valueAvailable)}* está preste a expirar aqui na Confiance.\nAproveite essa oferta exclusiva e me chame agora mesmo! \n\nTer *${formatNumberAsCurrency(valueAvailable)}* na sua conta te ajudaria?`;
+    let message = `Olá ${first_name}, tudo bem? \nEstou passando para informar que seu crédito de até *${formatNumberAsCurrency(valueAvailable)}* está preste a expirar aqui na Confiance.\nAproveite essa oferta exclusiva e me chame agora mesmo! \n\nTer *${formatNumberAsCurrency(valueAvailable)}* na sua conta te ajudaria?`;
 
    
     const messageData = {

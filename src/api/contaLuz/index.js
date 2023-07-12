@@ -398,11 +398,21 @@ router.post('/bot-message', async (req, res) => {
 	const { first_name, last_name, phone, valueAvailable } = req.body;
 	const userData = await createUserForBot({ first_name, last_name, phone })
 
-	if(!userData) return res.status(400).json({ message: 'Unable to send message' });
+	if(!userData) return res.status(400).json({ error: 'Unable to send message' });
 
-	await sendBotMessage({first_name, userID: userData.data.id, valueAvailable })
+    try {
+        const msgSent = await sendBotMessage({first_name, userID: userData.data.id, valueAvailable });
 
-	return res.json({ message: 'Bot message sent' });
+        if(!msgSent) return res.status(400).json({ error: 'Unable to send message'});
+
+        return res.json({ message: 'Bot message sent' });
+
+    } catch(error) {
+        console.log(error);
+        return res.status(400).json({ error: 'Unable to send message' });
+    }
+
+
 })
 
 module.exports = router;

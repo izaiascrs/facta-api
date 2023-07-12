@@ -137,6 +137,7 @@ async function createUserForBot({ phone, first_name, last_name }) {
 
     try {
         const data = await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/`, userInfo, CONTA_LUZ_HEADERS);
+        console.log(data);
         if(data) return data;
         return false;
     } catch (error) {

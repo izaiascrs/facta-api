@@ -137,7 +137,6 @@ async function createUserForBot({ phone, first_name, last_name }) {
 
     try {
         const data = await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/`, userInfo, CONTA_LUZ_HEADERS);
-        console.log(data);
         if(data) return data;
         return false;
     } catch (error) {
@@ -150,7 +149,7 @@ async function createUserForBot({ phone, first_name, last_name }) {
 async function sendBotMessage({ userID = '', valueAvailable = 900, first_name='' }) {
     first_name = first_name[0]?.toUpperCase() + first_name?.slice(1);
 
-    let message = `Olá ${first_name}, tudo bem? \nEstou passando para informar que seu crédito de até *${formatNumberAsCurrency(valueAvailable)}* está preste a expirar aqui na Confiance.\nAproveite essa oferta exclusiva e me chame agora mesmo! \n\nTer *${formatNumberAsCurrency(valueAvailable)}* na sua conta te ajudaria?`;
+    let message = `Olá ${first_name}, tudo bem com você? \n\nEstou passando para lembrar que a simulação que você realizou no empréstimo com débito na conta de luz está prestes a expirar. *São ${formatNumberAsCurrency(valueAvailable)} pré aprovado para você e com liberação rápida e descomplicada*. \n\nEsses *${formatNumberAsCurrency(valueAvailable)}*, te ajudariam hoje? \n\nMe chama aqui que já te ajudo rapidinho!`;
 
    
     const messageData = {

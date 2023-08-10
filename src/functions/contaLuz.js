@@ -149,9 +149,15 @@ async function createUserForBot({ phone, first_name, last_name }) {
 async function sendBotMessage({ userID = '', valueAvailable = 900, first_name='' }) {
     first_name = first_name[0]?.toUpperCase() + first_name?.slice(1);
 
-    let message = `Olá ${first_name}, tudo bem com você? \n\nEstou passando para lembrar que a simulação que você realizou no empréstimo com débito na conta de luz está prestes a expirar. *São ${formatNumberAsCurrency(valueAvailable)} pré aprovado para você e com liberação rápida e descomplicada*. \n\nEsses *${formatNumberAsCurrency(valueAvailable)}*, te ajudariam hoje? \n\nMe chama aqui que já te ajudo rapidinho!`;
+  let message = `Olá ${first_name} , tudo bem? Sou a Mayara especialista de credito da Confiance!\n
+Reforço que seu pedido de empréstimo com débito na conta de energia ainda está disponível!💡💰\n
+Tenho novas condições com outros valores e parcelas.\n\n
+Opção 1: R$1500,00 em 22 de R$262,00\n
+Opção 2: R$1100,00 em 18 de R$201,00 (Recomendado)\n
+Opção 3: R$900,00 em 12 de R$ 186,54\n
+Esse valor te ajudaria hoje?\n
+Responda SIM ou NÃO`;
 
-   
     const messageData = {
         "type": "text",
         "value": message,

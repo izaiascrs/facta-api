@@ -219,13 +219,13 @@ router.post('/proposal/send-status', async (req, res) => {
 })
 
 router.post('/bot-message', async (req, res) => {
-	const { first_name, last_name, phone } = req.body;
+	const { first_name, last_name, phone, flowID } = req.body;
 	const userCreated = await whatsappCreateUser({ first_name, last_name, phone });
 	if(!userCreated) return res.status(400).json({ error: 'Unable to send message' });
 
     try {        
         const id = await whatsappGetUserIdByPhone({ userPhone: phone });       
-        const msgSent = await fgtsSendBotFluxo({ userID: id });
+        const msgSent = await fgtsSendBotFluxo({ userID: id, flowID });
         if(!msgSent) return res.status(400).json({ error: 'Unable to send message'});
         return res.json({ message: 'Bot message sent' });
     } catch(error) {

@@ -86,8 +86,8 @@ async function fgtsSendFluxo({ userID = ''}) {
     }
 }
 
-async function fgtsSendBotFluxo({ userID = ''}) {    
-    const flowInfo = { flow: 2253576 };
+async function fgtsSendBotFluxo({ userID = '', flowID }) {    
+    const flowInfo = { flow: flowID || 2253576 };
     try {
         await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_flow/`, flowInfo, FGTS_HEADERS);
         return true;

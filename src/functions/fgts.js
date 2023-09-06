@@ -75,9 +75,19 @@ async function whatsappGetUserIdByPhone({ userPhone = '' }) {
     }
 }
 
-
 async function fgtsSendFluxo({ userID = ''}) {    
     const flowInfo = { flow: 545495 };
+    try {
+        await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_flow/`, flowInfo, FGTS_HEADERS);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+async function fgtsSendBotFluxo({ userID = ''}) {    
+    const flowInfo = { flow: 2253576 };
     try {
         await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_flow/`, flowInfo, FGTS_HEADERS);
         return true;
@@ -131,5 +141,6 @@ module.exports = {
     fgtsSendWhatsappMessage,
     whatsappCreateUser,
     whatsappGetUserIdByPhone,
-    notifyFgtsStatus
+    notifyFgtsStatus,
+    fgtsSendBotFluxo
 };

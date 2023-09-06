@@ -8,7 +8,8 @@ const {
     fgtsSendWhatsappMessage,
     whatsappCreateUser,
     whatsappGetUserIdByPhone,
-    notifyFgtsStatus
+    notifyFgtsStatus,
+    fgtsSendBotFluxo
 } = require('../../functions/fgts'); 
 
 const router = express.Router();
@@ -41,6 +42,26 @@ router.get('/token', async (req, res) => {
         return res.json({ message: 'error' })
     }
 });
+
+router.post('/token', async(req, res) => {
+    const token = req.body.token;
+    const url = 'https://smartwatchtec.com.br/api';
+    try {
+        const { data } = await axios.get(`${process.env.FACTA_BASE_URL}/gera-token`, {
+            headers: {
+                'Authorization': token,
+            }
+        });
+
+        if(!data.erro) data.url = url;
+
+        return res.json(data);
+
+    } catch (error) {
+        console.log(error);
+        return res.json({ message: 'error' })
+    }
+})
 
 router.post('/saldo', async (req, res) => {
         
@@ -197,5 +218,22 @@ router.post('/proposal/send-status', async (req, res) => {
     return res.json({ ok: true });
 })
 
+router.post('/bot-message', async (req, res) => {
+	const { first_name, last_name, phone } = req.body;
+	const userCreated = await whatsappCreateUser({ first_name, last_name, phone });
+	if(!userCreated) return res.status(400).json({ error: 'Unable to send message' });
+
+    try {        
+        const id = await whatsappGetUserIdByPhone({ userPhone: phone });       
+        const msgSent = await fgtsSendBotFluxo({ userID: id });
+        if(!msgSent) return res.status(400).json({ error: 'Unable to send message'});
+        return res.json({ message: 'Bot message sent' });
+    } catch(error) {
+        console.log(error);
+        return res.status(400).json({ error: 'Unable to send message' });
+    }
+
+
+})
 
 module.exports = router;

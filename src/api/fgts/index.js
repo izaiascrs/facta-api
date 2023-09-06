@@ -43,26 +43,6 @@ router.get('/token', async (req, res) => {
     }
 });
 
-router.post('/token', async(req, res) => {
-    const token = req.body.token;
-    const url = 'https://smartwatchtec.com.br/api';
-    try {
-        const { data } = await axios.get(`${process.env.FACTA_BASE_URL}/gera-token`, {
-            headers: {
-                'Authorization': token,
-            }
-        });
-
-        if(!data.erro) data.url = url;
-
-        return res.json(data);
-
-    } catch (error) {
-        console.log(error);
-        return res.json({ message: 'error' })
-    }
-})
-
 router.post('/saldo', async (req, res) => {
         
     if(!apiCredentials?.token) await getToken(apiCredentials);
@@ -217,6 +197,43 @@ router.post('/proposal/send-status', async (req, res) => {
     await notifyFgtsStatus({ status: 'pending', userID: 22826894, name });
     return res.json({ ok: true });
 })
+
+router.post('/bot-token', async(req, res) => {
+    const token = req.body.token;    
+
+    if(!token) return res.json({ error: 'No Token Provided' })
+
+    try {
+        const { data } = await axios.get(`https://webservice-homol.facta.com.br/gera-token`, {
+            headers: {
+                'Authorization': token,
+            }
+        });
+
+        return res.json(data);
+
+    } catch (error) {
+        console.log(error);
+        return res.json({ message: 'error' })
+    }
+})
+
+router.post('/bot-saldo', async (req, res) => {
+    const { cpf, token } = req.body;    
+    try {
+        const { data } = await axios.get(`https://webservice-homol.facta.com.br/fgts/saldo?cpf=${cpf}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        console.log(data);
+        return res.json(data)
+    } catch (error) {
+        console.log(error.message);
+        return res.json({ message: 'error' })
+    }
+    
+});
 
 router.post('/bot-message', async (req, res) => {
 	const { first_name, last_name, phone, flowID } = req.body;

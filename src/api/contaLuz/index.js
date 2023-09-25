@@ -77,13 +77,11 @@ router.post('/user/create-v2', async(req, res) => {
 
     const id = await contaLuzGetUserIdByPhone({ userPhone: phone });
 
-    const valueAvailable = await contaLuzGetValues({ propostaId: offerId });
-
-    if(valueAvailable.valor) value = valueAvailable.valor;
-
     const messageSend = await sendUserInfoMessage({ userID: id , messageObj: userMessageObj, valueAvailable: value });
-
     await contaLuzSendWhatsappFlow({ userID: id });
+
+    // const valueAvailable = await contaLuzGetValues({ propostaId: offerId });
+    // if(valueAvailable.valor) value = valueAvailable.valor;
 
     if(messageSend) {
         return res.json({ message: 'message sent'});

@@ -10,13 +10,11 @@ const {
     getToken,
     contaLuzCreateUser,
     contaLuzGetUserIdByPhone,
-    contaLuzSendWhatsappMessage,
-    contaLuzSendWhatsappFlow,
-    sendUserInfoMessage,
+    contaLuzSendWhatsappMessage,    
 	normalizeData,
 	sendProposalIDAndLinkMessage,
-	createUserForBot,
-	sendBotMessage
+    sendSiteSimulationsMsg,
+    sendBotAnaliseMessage
 } = require('../../functions/contaLuz');
 
 const router = express.Router();
@@ -72,18 +70,11 @@ router.post('/user/create-v2', async(req, res) => {
     let value;
 
     const { firstName, lastName, phone, userMessageObj, offerId } = req.body;
+    const Telefone = phone?.replace('+', '') || 'N/A';
 
-    await contaLuzCreateUser({ first_name: firstName, last_name: lastName , phone });
+    const messageSent = await sendSiteSimulationsMsg({ messageObj: { ...userMessageObj, Telefone, telefone_formatado: userMessageObj.Telefone }});
 
-    const id = await contaLuzGetUserIdByPhone({ userPhone: phone });
-
-    const messageSend = await sendUserInfoMessage({ userID: id , messageObj: userMessageObj, valueAvailable: value });
-    await contaLuzSendWhatsappFlow({ userID: id });
-
-    // const valueAvailable = await contaLuzGetValues({ propostaId: offerId });
-    // if(valueAvailable.valor) value = valueAvailable.valor;
-
-    if(messageSend) {
+    if(messageSent.ok) {
         return res.json({ message: 'message sent'});
     }
 
@@ -394,17 +385,11 @@ async function searchProposalByID({ proposalID = '' }) {
 
 router.post('/bot-message', async (req, res) => {
 	const { first_name, last_name, phone, valueAvailable } = req.body;
-	const userData = await createUserForBot({ first_name, last_name, phone })
-
-	if(!userData) return res.status(400).json({ error: 'Unable to send message' });
-
-    try {
-        const msgSent = await sendBotMessage({first_name, userID: userData.data.id, valueAvailable });
-
-        if(!msgSent) return res.status(400).json({ error: 'Unable to send message'});
-
+	
+    try {        
+        const msgSent = await sendBotAnaliseMessage({ userData: req.body });
+        if(!msgSent.ok) return res.status(400).json({ error: 'Unable to send message'});
         return res.json({ message: 'Bot message sent' });
-
     } catch(error) {
         console.log(error);
         return res.status(400).json({ error: 'Unable to send message' });

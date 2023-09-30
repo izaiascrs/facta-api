@@ -2,7 +2,11 @@ const axios = require('axios');
 const FormData = require('form-data');
 require('dotenv').config();
 
+const { BOT, CONTRATO_LINK, NOTIFICAR_ALINE, SIMULACAO} = require('../constants/fgts')
+
 const FGTS_HEADERS = { headers: { 'API-KEY': process.env.WHATSAPP_KEY } };
+
+const FGTS_WEBHOOK_LINK = process.env.FGTS_WEBHOOK_LINK;
 
 async function getToken(apiCredentials) {
     try {
@@ -75,10 +79,73 @@ async function whatsappGetUserIdByPhone({ userPhone = '' }) {
     }
 }
 
-async function fgtsSendFluxo({ userID = ''}) {    
+async function fgtsSendFluxo({ userID = ''}) {
     const flowInfo = { flow: 545495 };
     try {
         await axios.post(`${process.env.WHATSAPP_BASE_URL}/subscriber/${userID}/send_flow/`, flowInfo, FGTS_HEADERS);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+async function fgtsSendSimulationMsg({ telefone = ''  }) {
+    try {
+        await axios.post(FGTS_WEBHOOK_LINK, { telefone, tipo_fluxo: SIMULACAO });
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+async function fgtsSendContractLinkMsg({ contractLink = '', nome = '', telefone = '' }) {
+    const msgData = {
+        contrato_link: contractLink,
+        nome: nome,
+        telefone: telefone,
+        tipo_fluxo: CONTRATO_LINK,
+    }
+
+    try {
+        await axios.post(FGTS_WEBHOOK_LINK, msgData);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+async function fgtsSendBotSimulationMsg({ nome, telefone }) {
+    const msgData = {        
+        nome: nome,
+        telefone: telefone,
+        tipo_fluxo: BOT,
+    }
+
+    try {
+        await axios.post(FGTS_WEBHOOK_LINK, msgData);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+async function fgtsNotifyAline({ status, nome }) {
+    let message = '';
+
+    if(status === 'done') {
+        message += `O cliente ${nome} concluiu a contratação do saque aniversário do facta!`;
+    } else {
+        message += `O cliente ${nome} desistiu da contratação do saque aniversário do facta!`;
+    }
+
+    const msgData = { tipo_fluxo: NOTIFICAR_ALINE, nome, mensagem: message };
+
+    try {
+        await axios.post(FGTS_WEBHOOK_LINK, msgData);
         return true;
     } catch (error) {
         console.log(error);
@@ -97,7 +164,7 @@ async function fgtsSendBotFluxo({ userID = '', flowID }) {
     }
 }
 
-async function fgtsSendWhatsappMessage({ userID = '', contractLink = '' }) {    
+async function fgtsSendWhatsappMessage({ userID = '', contractLink = '' }) {
     
     const message = { "type": "text", "value": contractLink };
 
@@ -134,6 +201,7 @@ async function notifyFgtsStatus({ userID = '', status = 'done', name = '' }) {
 
 }
 
+
 module.exports = { 
     getToken,
     sendWhatsAppLink,
@@ -142,5 +210,9 @@ module.exports = {
     whatsappCreateUser,
     whatsappGetUserIdByPhone,
     notifyFgtsStatus,
-    fgtsSendBotFluxo
+    fgtsSendBotFluxo,
+    fgtsSendSimulationMsg,
+    fgtsSendContractLinkMsg,
+    fgtsSendBotSimulationMsg,
+    fgtsNotifyAline
 };

@@ -1,7 +1,11 @@
 const axios = require('axios');
 require('dotenv').config();
 
+const { BOT, SIMULACAO } = require('../constants/contaLuz')
+
 const CONTA_LUZ_HEADERS = { headers: { 'API-KEY': process.env.WHATSAPP_KEY } };
+
+const CONTA_LUZ_WEBHOOK_LINK = process.env.CONTA_LUZ_WEBHOOK_LINK;
 
 async function getToken(apiCredentials) {
     const userCredentials = {
@@ -91,6 +95,35 @@ async function sendUserInfoMessage({ messageObj = {} , userID = '', valueAvailab
     }
 }
 
+async function sendSiteSimulationsMsg({ messageObj = {}}) {
+
+    const valor_formatado = String(messageObj['Valor'] || 900).replace('.', '')
+
+    const msgData = {
+        valor: formatNumberAsCurrency(valor_formatado),
+        cpf: messageObj['CPF'] || 'N/A',
+        nome: messageObj['Nome'] || 'N/A',
+        nascimento: messageObj['Data Nascimento'] || 'N/A',
+        telefone_formatado: messageObj['telefone_formatado'] || 'N/A',
+        classificacao: messageObj['Classificação'] || 'N/A',
+        cep: messageObj['CEP'] || 'N/A',
+        estado: messageObj['Estado'] || 'N/A',
+        cidade: messageObj['Cidade'] || 'N/A',
+        cia: messageObj['Companhia'] || 'N/A',
+        telefone: messageObj['Telefone'],
+        tipo_fluxo: SIMULACAO
+    }
+    
+    try {
+        await axios.post(CONTA_LUZ_WEBHOOK_LINK, msgData);
+        return { ok: true };
+    } catch (error) {
+        console.log(error);
+        return error;        
+    }
+
+}
+
 async function sendProposalIDAndLinkMessage({ proposalID = 0 , userID = '', name = '', page = '' }) {
     const BASE_URL = page || 'https://www.isocredconfiance.com.br/emprestimo-na-conta-de-energia';
     let message = `Olá ${name}, esse é ID da sua simulação *${proposalID}*, `;
@@ -145,7 +178,6 @@ async function createUserForBot({ phone, first_name, last_name }) {
     }
 }
 
-
 async function sendBotMessage({ userID = '', valueAvailable = 900, first_name='' }) {
     first_name = first_name[0]?.toUpperCase() + first_name?.slice(1);
 
@@ -168,6 +200,25 @@ Para mais informações, DIGITE 1 💡💰👩🏻‍💻`;
     }
 }
 
+async function sendBotAnaliseMessage({ userData = {}}) {
+    const valor_disponivel = String((userData['valueAvailable']) || 900);
+    const msgData = {
+        nome: userData['first_name'] || 'N/A',
+        sobrenome: userData['last_name'] || 'N/A',
+        telefone: userData['phone']?.replace('+', '') || 'N/A',
+        valor_disponivel: formatNumberAsCurrency(valor_disponivel.replace('.', '')),
+        tipo_fluxo: BOT,
+    }
+
+    try {
+        await axios.post(CONTA_LUZ_WEBHOOK_LINK, msgData);
+        return { ok: true };
+    } catch (error) {
+        console.log(error);
+        return error;        
+    }
+}
+
 
 module.exports = {
     contaLuzCreateUser,
@@ -180,5 +231,7 @@ module.exports = {
     normalizeData,
     sendProposalIDAndLinkMessage,
     createUserForBot,
-    sendBotMessage
+    sendBotMessage,
+    sendSiteSimulationsMsg,
+    sendBotAnaliseMessage,
 };

@@ -4,12 +4,16 @@ const FormData = require('form-data');
 const {
     getToken, 
     sendWhatsAppLink,
-    fgtsSendFluxo,
-    fgtsSendWhatsappMessage,
+    fgtsSendFluxo, //
+    fgtsSendWhatsappMessage, //
     whatsappCreateUser,
     whatsappGetUserIdByPhone,
-    notifyFgtsStatus,
-    fgtsSendBotFluxo
+    notifyFgtsStatus, //
+    fgtsSendBotFluxo, //
+    fgtsSendSimulationMsg,
+    fgtsSendContractLinkMsg,
+    fgtsSendBotSimulationMsg,
+    fgtsNotifyAline
 } = require('../../functions/fgts'); 
 
 const router = express.Router();
@@ -178,12 +182,10 @@ router.post('/proposal/create', async (req, res) => {
         Object.entries(apiData).forEach(([key, value]) => formData.append(key, value));
         const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa3-proposta-cadastro`, formData, headers);
         console.log(data);
-
-        await whatsappCreateUser({ first_name, last_name, phone });
-        const id = await whatsappGetUserIdByPhone({ userPhone: phone });
-        await fgtsSendFluxo({ userID: id });
-        await fgtsSendWhatsappMessage({userID: id, contractLink: data.url_formalizacao });      
-        await notifyFgtsStatus({ status: 'done', userID: 22826894, name: first_name });
+        const telefone = phone.replace('+', '');
+        await fgtsSendSimulationMsg({ telefone });
+        await fgtsSendContractLinkMsg({ contractLink: data.url_formalizacao, nome: first_name , telefone: telefone });
+        await fgtsNotifyAline({ status: 'done', nome: first_name });
         return res.json(data);
     } catch (error) {
         console.log(error);
@@ -192,9 +194,8 @@ router.post('/proposal/create', async (req, res) => {
 })
 
 router.post('/proposal/send-status', async (req, res) => {
-    const { name } = req.body;
-    console.log({ name });
-    await notifyFgtsStatus({ status: 'pending', userID: 22826894, name });
+    const { name } = req.body;    
+    await fgtsNotifyAline({ status: 'pending', nome: name })
     return res.json({ ok: true });
 })
 
@@ -237,20 +238,15 @@ router.post('/bot-saldo', async (req, res) => {
 
 router.post('/bot-message', async (req, res) => {
 	const { first_name, last_name, phone, flowID } = req.body;
-	const userCreated = await whatsappCreateUser({ first_name, last_name, phone });
-	if(!userCreated) return res.status(400).json({ error: 'Unable to send message' });
-
     try {        
-        const id = await whatsappGetUserIdByPhone({ userPhone: phone });       
-        const msgSent = await fgtsSendBotFluxo({ userID: id, flowID });
+        const telefone = phone?.replace('+', '')
+        const msgSent =  await fgtsSendBotSimulationMsg({ nome: first_name, telefone });
         if(!msgSent) return res.status(400).json({ error: 'Unable to send message'});
         return res.json({ message: 'Bot message sent' });
     } catch(error) {
         console.log(error);
         return res.status(400).json({ error: 'Unable to send message' });
     }
-
-
 })
 
 module.exports = router;

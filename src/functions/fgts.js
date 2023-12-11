@@ -7,6 +7,8 @@ const { BOT, CONTRATO_LINK, NOTIFICAR_ALINE, SIMULACAO} = require('../constants/
 const FGTS_HEADERS = { headers: { 'API-KEY': process.env.WHATSAPP_KEY } };
 
 const FGTS_WEBHOOK_LINK = process.env.FGTS_WEBHOOK_LINK;
+const FGTS_NOTIFY_ALINE_WEBHOOK_LINK = process.env.FGTS_NOTIFY_ALINE_WEBHOOK_LINK;
+const NOTIFY_PHONE = process.env.NOTIFY_PHONE;
 
 async function getToken(apiCredentials) {
     try {
@@ -142,10 +144,10 @@ async function fgtsNotifyAline({ status, nome }) {
         message += `O cliente ${nome} desistiu da contratação do saque aniversário do facta!`;
     }
 
-    const msgData = { tipo_fluxo: NOTIFICAR_ALINE, nome, mensagem: message };
+    const msgData = { tipo_fluxo: NOTIFICAR_ALINE, mensagem: message, telefone: NOTIFY_PHONE, };
 
     try {
-        await axios.post(FGTS_WEBHOOK_LINK, msgData);
+        await axios.post(FGTS_NOTIFY_ALINE_WEBHOOK_LINK, msgData);
         return true;
     } catch (error) {
         console.log(error);

@@ -180,10 +180,9 @@ router.post('/proposal/create', async (req, res) => {
     try {
         console.log({ apiData });
         Object.entries(apiData).forEach(([key, value]) => formData.append(key, value));
-        const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa3-proposta-cadastro`, formData, headers);
-        console.log(data);
+        const { data } = await axios.post(`${process.env.FACTA_BASE_URL}/proposta/etapa3-proposta-cadastro`, formData, headers);        
         const telefone = phone.replace('+', '');
-        await fgtsSendSimulationMsg({ telefone });
+        // await fgtsSendSimulationMsg({ telefone });
         await fgtsSendContractLinkMsg({ contractLink: data.url_formalizacao, nome: first_name , telefone: telefone });
         await fgtsNotifyAline({ status: 'done', nome: first_name });
         return res.json(data);
@@ -237,7 +236,7 @@ router.post('/bot-saldo', async (req, res) => {
 });
 
 router.post('/bot-message', async (req, res) => {
-	const { first_name, last_name, phone, flowID } = req.body;
+	const { first_name, phone } = req.body;
     try {        
         const telefone = phone?.replace('+', '')
         const msgSent =  await fgtsSendBotSimulationMsg({ nome: first_name, telefone });

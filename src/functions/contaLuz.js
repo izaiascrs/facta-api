@@ -113,6 +113,8 @@ async function sendSiteSimulationsMsg({ messageObj = {}}) {
         telefone: messageObj['Telefone'],
         tipo_fluxo: SIMULACAO
     }
+
+    console.log(msgData);
     
     try {
         await axios.post(CONTA_LUZ_WEBHOOK_LINK, msgData);

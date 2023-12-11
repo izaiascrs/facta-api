@@ -67,9 +67,7 @@ router.post('/user/create', async(req, res) => {
 })
 
 router.post('/user/create-v2', async(req, res) => {
-    let value;
-
-    const { firstName, lastName, phone, userMessageObj, offerId } = req.body;
+    const { phone, userMessageObj  } = req.body;
     const Telefone = phone?.replace('+', '') || 'N/A';
 
     const messageSent = await sendSiteSimulationsMsg({ messageObj: { ...userMessageObj, Telefone, telefone_formatado: userMessageObj.Telefone }});

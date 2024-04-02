@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {    
+  "scripts": {
     "start": "concurrently \"node src/index.js\" \"npm run queue\"",
     "dev": "concurrently  \"npm run dev:server\" \"npm run dev:queue\"",
-    "dev:server": "nodemon src/index.js",    
+    "dev:server": "nodemon src/index.js",
     "dev:queue": "nodemon src/queueProcess.js",
     "queue": "node src/queueProcess.js"
   },

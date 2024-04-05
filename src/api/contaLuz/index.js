@@ -374,7 +374,7 @@ router.get('/proposal/search/:id', async (req, res) => {
 
 })
 
-async function searchProposalByID({ proposalID = '' }) {	
+async function searchProposalByID({ proposalID = '' }) {
 	if(!apiCredentials?.token) {
         await getToken(apiCredentials);
     }
@@ -414,5 +414,63 @@ router.post('/bot-message', async (req, res) => {
 
 
 })
+
+router.post('/proposal/search-by-cpf', async (req, res) => {
+    const { cpf } = req.body;	
+
+    if(!cpf) {
+        res.status(404)
+        return res.json({ message: 'Invalid CPF!'});
+    }
+
+    try {
+        const data = await searchByCPF({ cpf });
+        console.log({data});
+        if(!data.success) {
+            res.status(404);
+            return res.json({ message: 'Something went wrong!'})
+        }
+
+        const { id, situacaoDescricao: status, cliente: name, situacaoId } = data.data.itens[0];        
+        return res.json({ id, status, name, situacaoId });
+        
+    } catch (error) {
+        console.log(error);
+        res.status(404);
+        return res.json(error);
+    }
+
+})
+
+async function searchByCPF({ cpf = ''}) {
+    await verifyToken();
+
+    const searchData = {
+        "pagina": 1,
+        "filtroDinamico": cpf,	
+        "ordenacaoAsc": false
+    }
+
+    try {
+        const { data } = await axios.post(`https://api.crefazon.com.br/api/proposta/acompanhamento`, searchData, {
+            headers: {
+                'Authorization': `Bearer ${apiCredentials?.token}`
+            }
+        });
+        return data;
+    } catch (error) {
+        console.log(error);
+        return error;
+    }    
+}
+
+async function verifyToken() {
+    if(!apiCredentials?.token) {
+        await getToken(apiCredentials);
+    }
+    const currentDay = new Date()
+    const expiresDay = new Date(apiCredentials.expires);
+    if(currentDay >= expiresDay) await getToken(apiCredentials);
+}
 
 module.exports = router;

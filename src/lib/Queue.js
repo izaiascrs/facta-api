@@ -41,10 +41,10 @@ googleSheetQueue.on('completed', (job) => {
 })
 
 googleSheetQueue.on('failed', (job, error) => {
-    console.log('sheet failed');
+    console.log('sheet failed', error.message);
 })
 
-updateUserQueue.on('completed', (job) => {    
+updateUserQueue.on('completed', (job) => {
     console.log('user update complete');
     const images = job.data.images;
     if(images) {

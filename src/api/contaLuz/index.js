@@ -257,8 +257,6 @@ router.post('/product-offer/:id', async (req, res) => {
   const apiData = req.body;
   const { id } = req.params;
 
-  console.log({ apiData });
-
   try {
     const { data } = await axios.post(
       `${process.env.CREFAZ_BASE_URL}/api/Proposta/simulacao-valor/${id}`,
@@ -321,29 +319,10 @@ router.post(
   async (req, res) => {
     const { files } = req;
     const fileInfo = { files, folderName: req.body.nome };
-    const today = new Intl.DateTimeFormat('pt-br', options).format(new Date());
+    const date = new Date(new Date().toLocaleString('en', { timeZone: 'America/Sao_Paulo'}));
+    const today = new Intl.DateTimeFormat('pt-br', options).format(date);
 
     const valor = req.body['valor']?.replace(/\D/g, '');
-
-    // const userData = {
-    //   nome: req.body['nome'],
-    //   cpf: req.body['cpf'],
-    //   whatsApp: req.body['whatsApp'],
-    //   email: req.body['email'],
-    //   'data-de-nascimento': req.body['data-de-nascimento'],
-    //   'companhia-de-energia': req.body['companhia-de-energia'],
-    //   cep: req.body['cep'],
-    //   bairro: req.body['bairro'],
-    //   logradouro: req.body['logradouro'],
-    //   estado: req.body['estado'],
-    //   cidade: req.body['cidade'],
-    //   parcelas: req.body['parcelas'],
-    //   renda: req.body['renda'],
-    //   aprovado: req.body['aprovado'],
-    //   instalação: req.body['instalacao'],
-    //   valor: valor,
-    //   timestamp: today,
-    // };
 
     const userData = {
         ...req.body,
@@ -449,8 +428,6 @@ async function searchProposalByID({ proposalID = '' }) {
       }
     );
 
-    console.log(data);
-
     return data;
   } catch (error) {
     console.log(error.message);
@@ -482,7 +459,6 @@ router.post('/proposal/search-by-cpf', async (req, res) => {
 
   try {
     const data = await searchByCPF({ cpf });
-    console.log({ data });
     if (!data.success) {
       res.status(404);
       return res.json({ message: 'Something went wrong!' });

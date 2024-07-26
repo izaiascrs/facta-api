@@ -164,11 +164,11 @@ router.post('/citie-available', async (req, res) => {
 router.post('/create-proposal', async (req, res) => {
   const userData = req.body;
   const state = userData.estado;
-  const citie = userData.cidade;
-  const citieID = cities[state].find((city) => city?.nome === citie)?.id;
-  userData.citieID = citieID;
+  const userCity = userData.cidade;  
+  const cityID = cities[state]?.find((city) => city?.nome === userCity)?.id ?? 0;
+  userData.citieID = cityID;
 
-  const formatedData = normalizeData(userData);
+  const formattedData = normalizeData(userData);
 
   if (!apiCredentials?.token) await getToken(apiCredentials);
 
@@ -180,7 +180,7 @@ router.post('/create-proposal', async (req, res) => {
   try {
     const { data } = await axios.post(
       `${process.env.CREFAZ_BASE_URL}/api/proposta`,
-      formatedData,
+      formattedData,
       {
         headers: {
           Authorization: `Bearer ${apiCredentials?.token}`,

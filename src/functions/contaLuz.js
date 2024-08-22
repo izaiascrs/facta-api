@@ -128,6 +128,7 @@ async function sendSiteSimulationsMsg({ messageObj = {} }) {
   const valor_formatado = messageObj['Valor'] || 900;
 
   const msgData = {
+    ...messageObj,
     valor: formatNumberAsCurrency(valor_formatado),
     cpf: messageObj['CPF'] || 'N/A',
     nome: messageObj['Nome'] || 'N/A',

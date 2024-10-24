@@ -282,6 +282,7 @@ router.post('/product-offer/:id', async (req, res) => {
 
 router.post('/update-proposal', async (req, res) => {
   const apiData = req.body;
+
   try {
     await axios.put(
       `${process.env.CREFAZ_BASE_URL}/api/Proposta/oferta-produto/${apiData.id}`,
@@ -296,19 +297,19 @@ router.post('/update-proposal', async (req, res) => {
     console.log(error);
   }
   // await updateUserQueue.add(apiData, { attempts: 1, backoff: delay });
-  try {
-    await axios.put(
-      `${process.env.CREFAZ_BASE_URL}/api/Proposta/oferta-produto/${apiData.id}`,
-      apiData,
-      {
-        headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
-        },
-      }
-    );
-  } catch (error) {
-    console.log(error);
-  }
+  // try {
+  //   await axios.put(
+  //     `${process.env.CREFAZ_BASE_URL}/api/Proposta/oferta-produto/${apiData.id}`,
+  //     apiData,
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${apiCredentials?.token}`,
+  //       },
+  //     }
+  //   );
+  // } catch (error) {
+  //   console.log(error);
+  // }
   // await updateUserQueue.add(apiData, { attempts: 1, backoff: delay });
   return res.json({ ok: true });
 });

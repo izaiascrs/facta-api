@@ -39,7 +39,7 @@ async function verifyMasterToken() {
   if (currentDay >= expiresDay) await getToken(apiCredentials);
 }
 
-async function saveSimulation(simulationData) {
+async function saveSimulation(simulationData = {}) {
   const postData = {
     ...simulationData,
     canalVendas: 1339,
@@ -69,8 +69,31 @@ async function saveSimulation(simulationData) {
 
 }
 
+async function saveMasterProposal(proposalData = {}) {
+  const postData = {
+    ...proposalData,    
+    usuario: process.env.MASTER_USER,
+    idCanal: 1339,
+  };
+
+  const headers = {
+    headers: {
+      Authorization: `Bearer ${apiCredentials?.token}`,
+    },
+  }
+
+  const { data } = await axios.post(
+    `${MASTER_BASE_URL}/cpfl/consignado/v1/proposta`,
+    postData,
+    headers
+  );
+
+  return data;
+}
+
 module.exports = {
   getToken,
   verifyMasterToken,
   saveSimulation,
+  saveMasterProposal,
 };

@@ -2,10 +2,12 @@ const axios = require('axios');
 require('dotenv').config();
 
 const { BOT, SIMULACAO } = require('../constants/contaLuz');
+const { sendMessageWithDigisac } = require('./digisac');
 
 const CONTA_LUZ_HEADERS = { headers: { 'API-KEY': process.env.WHATSAPP_KEY } };
 
 const CONTA_LUZ_WEBHOOK_LINK = process.env.CONTA_LUZ_WEBHOOK_LINK;
+
 
 async function getToken(apiCredentials) {
   const userCredentials = {
@@ -144,7 +146,8 @@ async function sendSiteSimulationsMsg({ messageObj = {} }) {
   };
 
   try {
-    await axios.post(CONTA_LUZ_WEBHOOK_LINK, msgData);
+    await sendMessageWithDigisac(msgData);
+    // await axios.post(CONTA_LUZ_WEBHOOK_LINK, msgData);
     return { ok: true };
   } catch (error) {
     console.log(error);

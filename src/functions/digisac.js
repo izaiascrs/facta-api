@@ -29,6 +29,10 @@ digisacBaseApi.interceptors.request.use(
   }
 );
 
+async function sleep(ms = 500) {
+  return new Promise(res => setTimeout(res, ms));
+}
+
 async function login() {
   const reqData = {
     grant_type: "password",
@@ -82,10 +86,39 @@ async function sendMessage(contact = {}) {
   }
 }
 
+async function sendSimpleMessage(contact = {}) {
+  const reqData = {
+    type: "chat",
+    serviceId: process.env.DIGISAC_SERVICE_ID,
+    number: (contact.telefone ?? "").replace(/\D/g, ""),
+    userId: process.env.DIGISAC_USER_ID,
+    origin: "user",
+    text: contact.message,
+  };
+  try {
+    const { data } = await digisacBaseApi.post("/messages", reqData);
+    return data;
+  } catch (error) {
+    console.log("ERROR TRYING SEND MESSAGE", error);
+  }
+}
+
 async function sendMessageWithDigisac(contact = {}) {
+  const secondMessage = 'Olá! Que bom ter você aqui na CrediConfiance. 😀\n' +
+                        'Meu nome é Aline, sou especialista em crédito com débito na conta de luz, e irei dar continuidade em seu atendimento.';
+
+  const thirdMessage = 'Vou precisar dos seguintes documentos para continuar seu atendimento:\n\n' +
+                       '✅Foto da conta de energia atualizada  de no máximo 60 dias\n'+
+                       '✅Foto do RG ou CNH\n'+
+                       '✅Conta para depósito (Corrente ou Poupança no seu nome)\n';
+
   try {
     await createContact(contact);
     await sendMessage(contact);
+    await sleep(50);
+    await sendSimpleMessage({...contact, message: secondMessage });
+    await sleep(200);
+    await sendSimpleMessage({...contact, message: thirdMessage });
     return { ok: true };
   } catch (error) {
     console.log("ERROR", error?.message ?? error);    

@@ -63,7 +63,7 @@ async function createContact(contact = {}) {
 
   try {
     const { data } = await digisacBaseApi.post("/contacts", reqData);
-    return data;
+    return data?.id;
   } catch (error) {
     console.log("ERROR TRYING CREATE USER", error);
   }
@@ -103,6 +103,20 @@ async function sendSimpleMessage(contact = {}) {
   }
 }
 
+async function transferConversation(contactId = "") {
+  const reqData = {
+    userId: process.env.DIGISAC_USER_ID, 
+    departmentId: process.env.DIGISAC_DEPARTMENT_ID,
+    comments: ""
+  }
+
+  try {
+    await digisacBaseApi.post(`/contacts/${contactId}/ticket/transfer`, reqData);
+  } catch (error) {
+    console.log("ERROR TRYING TRANSFER CONVERSATION", error);    
+  }
+}
+
 async function sendMessageWithDigisac(contact = {}) {
   const secondMessage = 'Olá! Que bom ter você aqui na CrediConfiance. 😀\n' +
                         'Meu nome é Aline, sou especialista em crédito com débito na conta de luz, e irei dar continuidade em seu atendimento.';
@@ -113,15 +127,16 @@ async function sendMessageWithDigisac(contact = {}) {
                        '✅Conta para depósito (Corrente ou Poupança no seu nome)\n';
 
   try {
-    await createContact(contact);
+    const contactId = await createContact(contact);
     await sendMessage(contact);
     await sleep(50);
     await sendSimpleMessage({...contact, message: secondMessage });
-    await sleep(200);
+    await sleep(50);
     await sendSimpleMessage({...contact, message: thirdMessage });
+    if(contactId) await transferConversation(contactId)    
     return { ok: true };
   } catch (error) {
-    console.log("ERROR", error?.message ?? error);    
+    console.log("ERROR", error?.message ?? error);
   }
 }
 

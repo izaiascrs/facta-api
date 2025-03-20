@@ -1,5 +1,12 @@
 const axios = require("axios");
 require("dotenv/config");
+const fs = require('fs');
+const path = require("path");
+
+const audioPath = path.join(__dirname, '../audios/audio.ogg');
+const audioBuffer = fs.readFileSync(audioPath);
+const audioBase64 = audioBuffer.toString('base64');
+
 
 const apiCredentials = {
   expires: "",
@@ -86,6 +93,25 @@ async function sendMessage(contact = {}) {
   }
 }
 
+async function sendAudioMessage(contact = {}) {
+  const reqData = {
+    serviceId: process.env.DIGISAC_SERVICE_ID,
+    number: (contact.telefone ?? "").replace(/\D/g, ""),
+    file: {
+      base64: audioBase64,
+      mimetype: "audio/mpeg"  
+    }
+  };
+
+
+  try {
+    const { data } = await digisacBaseApi.post("/messages", reqData);
+    return data;
+  } catch (error) {
+    console.log("ERROR TRYING SEND MESSAGE", error);
+  }
+}
+
 async function sendSimpleMessage(contact = {}) {
   const reqData = {
     type: "chat",
@@ -129,10 +155,8 @@ async function sendMessageWithDigisac(contact = {}) {
   try {
     const contactId = await createContact(contact);
     await sendMessage(contact);
-    await sleep(50);
-    await sendSimpleMessage({...contact, message: secondMessage });
-    await sleep(50);
-    await sendSimpleMessage({...contact, message: thirdMessage });
+    await sleep(500);
+    await sendAudioMessage({ ...contact });
     if(contactId) await transferConversation(contactId)    
     return { ok: true };
   } catch (error) {

@@ -7,7 +7,6 @@ const audioPath = path.join(__dirname, '../audios/audio.ogg');
 const audioBuffer = fs.readFileSync(audioPath);
 const audioBase64 = audioBuffer.toString('base64');
 
-
 const apiCredentials = {
   expires: "",
 };
@@ -155,8 +154,10 @@ async function sendMessageWithDigisac(contact = {}) {
   try {
     const contactId = await createContact(contact);
     await sendMessage(contact);
-    await sleep(500);
-    await sendAudioMessage({ ...contact });
+    await sleep(50);
+    await sendSimpleMessage({ ...contact, message: secondMessage });
+    await sleep(50);
+    await sendSimpleMessage({ ...contact, message: thirdMessage });
     if(contactId) await transferConversation(contactId)    
     return { ok: true };
   } catch (error) {

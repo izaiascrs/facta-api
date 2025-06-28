@@ -132,22 +132,14 @@ router.get('/token', async (req, res) => {
 
 router.post('/citie-available', async (req, res) => {
   const { citieID } = req.body;
-
-  if (!apiCredentials?.token) {
-    await getToken(apiCredentials);
-  }
-
-  const currentDay = new Date();
-  const expiresDay = new Date(apiCredentials.expires);
-
-  if (currentDay >= expiresDay) await getToken(apiCredentials);
+  const { token } = req.apiCredentials;
 
   try {
     const { data } = await axios.get(
       `${process.env.CREFAZ_BASE_URL}/api/proposta/produtos-regiao/${citieID}`,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -167,15 +159,9 @@ router.post('/create-proposal', async (req, res) => {
   const userCity = userData.cidade;  
   const cityID = cities[state]?.find((city) => city?.nome === userCity)?.id ?? 0;
   userData.citieID = cityID;
+  const { token } = req.apiCredentials;
 
   const formattedData = normalizeData(userData);
-
-  if (!apiCredentials?.token) await getToken(apiCredentials);
-
-  const currentDay = new Date();
-  const expiresDay = new Date(apiCredentials.expires);
-
-  if (currentDay >= expiresDay) await getToken(apiCredentials);
 
   try {
     const { data } = await axios.post(
@@ -183,7 +169,7 @@ router.post('/create-proposal', async (req, res) => {
       formattedData,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -202,13 +188,14 @@ router.post('/create-proposal', async (req, res) => {
 
 router.get('/offer/:id', async (req, res) => {
   const { id } = req.params;
+  const { token } = req.apiCredentials;
 
   try {
     const { data } = await axios.get(
       `${process.env.CREFAZ_BASE_URL}/api/proposta/oferta-produto/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -222,13 +209,13 @@ router.get('/offer/:id', async (req, res) => {
     }
     res.status(400);
     return res.json({ message: 'Error' });
-    // return res.json(offerMockData)
   }
 });
 
 router.post('/due-date', async (req, res) => {
   const { propostaId, produtoId, tabelaJurosId } = req.body;
   const apiData = { propostaId, produtoId, tabelaJurosId };
+  const { token } = req.apiCredentials;
 
   try {
     const { data } = await axios.post(
@@ -236,7 +223,7 @@ router.post('/due-date', async (req, res) => {
       apiData,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -256,6 +243,7 @@ router.post('/due-date', async (req, res) => {
 router.post('/product-offer/:id', async (req, res) => {
   const apiData = req.body;
   const { id } = req.params;
+  const { token } = req.apiCredentials;
 
   try {
     const { data } = await axios.post(
@@ -263,7 +251,7 @@ router.post('/product-offer/:id', async (req, res) => {
       apiData,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -282,6 +270,7 @@ router.post('/product-offer/:id', async (req, res) => {
 
 router.post('/update-proposal', async (req, res) => {
   const apiData = req.body;
+  const { token } = req.apiCredentials;
 
   try {
     await axios.put(
@@ -289,30 +278,65 @@ router.post('/update-proposal', async (req, res) => {
       apiData,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
+
+    return res.json({ ok: true });
+
   } catch (error) {
     console.log(error);
+    if (error.response) {
+      res.status(error.response.status);
+      return res.json(error.response.data);
+    }
+    res.status(400);
+    return res.json({ message: 'Error' });
   }
-  // await updateUserQueue.add(apiData, { attempts: 1, backoff: delay });
-  // try {
-  //   await axios.put(
-  //     `${process.env.CREFAZ_BASE_URL}/api/Proposta/oferta-produto/${apiData.id}`,
-  //     apiData,
-  //     {
-  //       headers: {
-  //         Authorization: `Bearer ${apiCredentials?.token}`,
-  //       },
-  //     }
-  //   );
-  // } catch (error) {
-  //   console.log(error);
-  // }
-  // await updateUserQueue.add(apiData, { attempts: 1, backoff: delay });
-  return res.json({ ok: true });
+  
 });
+
+router.post('/proposal/analyze/:id', async (req, res) => {
+  const { id } = req.params;
+  const { token } = req.apiCredentials;
+
+  const proposalData = {
+    ...req.body,
+    unidade: {
+      nomeVendedor: process.env.CREFAZ_VENDOR_NAME,
+      cpfVendedor: process.env.CREFAZ_VENDOR_CPF,
+      celularVendedor: process.env.CREFAZ_VENDOR_PHONE,
+    }
+  }
+
+  if(!id) {
+    res.status(400);
+    return res.json({ message: 'Proposal ID is missing' });
+  }
+
+  try {
+    const { data } = await axios.put(
+      `${process.env.CREFAZ_BASE_URL}/api/proposta/${id}`,
+      proposalData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.json(data);
+  } catch (error) {
+    console.log(error);
+    if (error.response) {
+      res.status(error.response.status);
+      return res.json(error.response.data);
+    }
+    res.status(400);
+    return res.json({ message: 'Error' });
+  }
+})
 
 router.post(
   '/image/upload',
@@ -344,6 +368,45 @@ router.post(
   }
 );
 
+router.post('/document/upload/:id', async (req, res) => {  
+  const { id } = req.params;
+  const { conteudo, documentoId } = req.body;
+  const apiData = { conteudo, documentoId };
+  const { token } = req.apiCredentials;
+
+  if(!id) {
+    res.status(400);
+    return res.json({ message: 'Documento ID is missing' });
+  }
+
+  if( !conteudo || !documentoId) {
+    res.status(400);
+    return res.json({ message: 'Conteudo or documentoId is missing' });
+  }
+
+   try {
+    const { data } = await axios.put(
+      `${process.env.CREFAZ_BASE_URL}/api/proposta/${id}/imagem`,
+      apiData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.json(data);
+  } catch (error) {
+    console.log(error);    
+    if (error.response) {
+      res.status(error.response.status);
+      return res.json(error.response.data);
+    }
+    res.status(400);
+    return res.json({ message: 'Error' });
+  }
+})
+
 router.post('/acompanhamento', async (req, res) => {
   console.log('webhook', req.body);
 
@@ -352,13 +415,14 @@ router.post('/acompanhamento', async (req, res) => {
 
 async function contaLuzGetValues({ propostaId }) {
   // api/Proposta/oferta-produto
+  const { token } = req.apiCredentials;
 
   try {
     const { data } = await axios.get(
       `${process.env.CREFAZ_BASE_URL}/api/proposta/oferta-produto/${propostaId}`,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -389,7 +453,7 @@ router.get('/proposal/search/:id', async (req, res) => {
       return res.json({ message: 'Proposal not found!' });
     }
 
-    const data = await searchProposalByID({ proposalID: id });
+    const data = await searchProposalByID({ proposalID: id, token: req.apiCredentials.token });
 
     if (data.success) {
       const resData = {
@@ -409,22 +473,73 @@ router.get('/proposal/search/:id', async (req, res) => {
   }
 });
 
-async function searchProposalByID({ proposalID = '' }) {
-  if (!apiCredentials?.token) {
-    await getToken(apiCredentials);
+router.get('/simulation/search/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (!id) {
+      res.status(404);
+      return res.json({ message: 'Proposal not found!' });
+    }
+
+    const data = await searchProposalByID({ proposalID: id, token: req.apiCredentials.token });
+
+    if (data.success) {
+      return res.json(data);
+    } else {
+      res.status(404);
+      return res.json({ message: 'Proposal not found!' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+    return res.json({ error: 'Something went wrong' });
+  }
+});
+
+router.post('/state/cities', async (req, res) => {
+  const { uf } = req.body;
+  const { token } = req.apiCredentials;
+
+  if (!uf) {
+    res.status(400);  
+    return res.json({ message: 'UF is required' });
   }
 
-  const currentDay = new Date();
-  const expiresDay = new Date(apiCredentials.expires);
+  try {
+    const { data } = await axios.post(
+      `${process.env.CREFAZ_BASE_URL}/api/endereco/cidade`,
+      { uf },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  if (currentDay >= expiresDay) await getToken(apiCredentials);
+    return res.json(data);
+  } catch (error) {
+    console.log(error);
+    if (error.response) {
+      res.status(error.response.status);
+      return res.json(error.response.data);
+    }
+    res.status(400);
+    return res.json({ message: 'Error' });
+  }
+});
+
+async function searchProposalByID({ proposalID = '', token }) {
+  if (!token) {
+    return { success: false, data: { message: 'Token is required' } };
+  }
 
   try {
     const { data } = await axios.get(
       `${process.env.CREFAZ_BASE_URL}/api/proposta/${proposalID}`,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -459,7 +574,7 @@ router.post('/proposal/search-by-cpf', async (req, res) => {
   }
 
   try {
-    const data = await searchByCPF({ cpf });
+    const data = await searchByCPF({ cpf, token: req.apiCredentials.token });
     if (!data.success) {
       res.status(404);
       return res.json({ message: 'Something went wrong!' });
@@ -479,8 +594,10 @@ router.post('/proposal/search-by-cpf', async (req, res) => {
   }
 });
 
-async function searchByCPF({ cpf = '' }) {
-  await verifyToken();
+async function searchByCPF({ cpf = '', token }) {
+  if (!token) {
+    return { success: false, data: { message: 'Token is required' } };
+  }
 
   const searchData = {
     pagina: 1,
@@ -494,7 +611,7 @@ async function searchByCPF({ cpf = '' }) {
       searchData,
       {
         headers: {
-          Authorization: `Bearer ${apiCredentials?.token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -505,13 +622,13 @@ async function searchByCPF({ cpf = '' }) {
   }
 }
 
-async function verifyToken() {
-  if (!apiCredentials?.token) {
-    await getToken(apiCredentials);
-  }
-  const currentDay = new Date();
-  const expiresDay = new Date(apiCredentials.expires);
-  if (currentDay >= expiresDay) await getToken(apiCredentials);
-}
+// async function verifyToken() {
+//   if (!apiCredentials?.token) {
+//     await getToken(apiCredentials);
+//   }
+//   const currentDay = new Date();
+//   const expiresDay = new Date(apiCredentials.expires);
+//   if (currentDay >= expiresDay) await getToken(apiCredentials);
+// }
 
 module.exports = router;

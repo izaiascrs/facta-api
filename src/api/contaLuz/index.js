@@ -268,6 +268,40 @@ router.post('/product-offer/:id', async (req, res) => {
   }
 });
 
+router.post('/product-offer/max-value/:id', async (req, res) => {
+  const apiData = req.body;
+  const { token } = req.apiCredentials;
+  const { id } = req.params;
+
+  if(!id) {
+    res.status(400);
+    return res.json({ message: 'Proposal ID is missing' });
+  }
+
+  try {
+    const { data } = await axios.post(
+      `${process.env.CREFAZ_BASE_URL}/api/Proposta/consulta-valor-limite/${id}`,
+      apiData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.json(data);
+  } catch (error) {
+    console.log(error);
+    if (error.response) {
+      res.status(error.response.status);
+      return res.json(error.response.data);
+    }
+    res.status(400);
+    return res.json({ message: 'Error' });
+  }
+
+})
+
 router.post('/update-proposal', async (req, res) => {
   const apiData = req.body;
   const { token } = req.apiCredentials;
@@ -327,12 +361,13 @@ router.post('/proposal/analyze/:id', async (req, res) => {
     );
 
     return res.json(data);
-  } catch (error) {
-    console.log(error);
+  } catch (error) {    
     if (error.response) {
       res.status(error.response.status);
+      console.log(error.response.data);
       return res.json(error.response.data);
     }
+    console.log(error);
     res.status(400);
     return res.json({ message: 'Error' });
   }

@@ -1,14 +1,14 @@
-const express = require('express');
-const axios = require('axios');
-const multer = require('multer');
+const express = require("express");
+const axios = require("axios");
+const multer = require("multer");
 const {
   uploadQueue,
   googleSheetQueue,
   updateUserQueue,
-} = require('../../lib/Queue');
+} = require("../../lib/Queue");
 
-const multerConfig = require('../../config/multer');
-const cities = require('../../../cities.json');
+const multerConfig = require("../../config/multer");
+const cities = require("../../../cities.json");
 
 const {
   getToken,
@@ -19,7 +19,10 @@ const {
   sendProposalIDAndLinkMessage,
   sendSiteSimulationsMsg,
   sendBotAnaliseMessage,
-} = require('../../functions/contaLuz');
+} = require("../../functions/contaLuz");
+const {
+  createEnergyTokenMiddleware,
+} = require("../../middleware/crefazOnTokenManager");
 
 const router = express.Router();
 const apiCredentials = {};
@@ -27,11 +30,11 @@ const apiCredentials = {};
 const delay = 1000 * 20; // 20 seconds
 
 const options = {
-  month: '2-digit',
-  day: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
+  month: "2-digit",
+  day: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
 };
 
 const mockDataCitieAvailable = {
@@ -49,11 +52,11 @@ const mockDataCitieAvailable = {
   errors: null,
 };
 
-router.get('/', (req, res) => {
-  return res.json({ message: 'conta luz router ok!' });
+router.get("/", (req, res) => {
+  return res.json({ message: "conta luz router ok!" });
 });
 
-router.post('/user/create', async (req, res) => {
+router.post("/user/create", async (req, res) => {
   const { firstName, lastName, phone } = req.body;
 
   await contaLuzCreateUser({
@@ -67,16 +70,16 @@ router.post('/user/create', async (req, res) => {
   const messageSend = await contaLuzSendWhatsappMessage({ userID: id });
 
   if (messageSend) {
-    return res.json({ message: 'message sent' });
+    return res.json({ message: "message sent" });
   }
 
   res.status(401);
-  return res.json({ message: 'unable to send message' });
+  return res.json({ message: "unable to send message" });
 });
 
-router.post('/user/create-v2', async (req, res) => {
+router.post("/user/create-v2", async (req, res) => {
   const { phone, userMessageObj } = req.body;
-  const Telefone = phone?.replace('+', '') || 'N/A';
+  const Telefone = phone?.replace("+", "") || "N/A";
 
   const messageSent = await sendSiteSimulationsMsg({
     messageObj: {
@@ -87,14 +90,14 @@ router.post('/user/create-v2', async (req, res) => {
   });
 
   if (messageSent.ok) {
-    return res.json({ message: 'message sent' });
+    return res.json({ message: "message sent" });
   }
 
   res.status(401);
-  return res.json({ message: 'unable to send message' });
+  return res.json({ message: "unable to send message" });
 });
 
-router.post('/send-link', async (req, res) => {
+router.post("/send-link", async (req, res) => {
   const { firstName, lastName, phone, offerId, page } = req.body;
 
   await contaLuzCreateUser({
@@ -114,23 +117,23 @@ router.post('/send-link', async (req, res) => {
 
   if (!messageSend) {
     res.status(401);
-    return res.json({ message: 'unable to send message' });
+    return res.json({ message: "unable to send message" });
   }
 
-  return res.json({ message: 'message sent' });
+  return res.json({ message: "message sent" });
 });
 
-router.get('/token', async (req, res) => {
+router.get("/token", async (req, res) => {
   try {
     await getToken(apiCredentials);
     return res.json(apiCredentials);
   } catch (error) {
     console.log(error);
-    return res.json({ message: 'Unable to Login' });
+    return res.json({ message: "Unable to Login" });
   }
 });
 
-router.post('/citie-available', async (req, res) => {
+router.post("/citie-available", async (req, res) => {
   const { citieID } = req.body;
   const { token } = req.apiCredentials;
 
@@ -153,11 +156,12 @@ router.post('/citie-available', async (req, res) => {
   }
 });
 
-router.post('/create-proposal', async (req, res) => {
+router.post("/create-proposal", async (req, res) => {
   const userData = req.body;
   const state = userData.estado;
-  const userCity = userData.cidade;  
-  const cityID = cities[state]?.find((city) => city?.nome === userCity)?.id ?? 0;
+  const userCity = userData.cidade;
+  const cityID =
+    cities[state]?.find((city) => city?.nome === userCity)?.id ?? 0;
   userData.citieID = cityID;
   const { token } = req.apiCredentials;
 
@@ -182,11 +186,11 @@ router.post('/create-proposal', async (req, res) => {
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
 });
 
-router.get('/offer/:id', async (req, res) => {
+router.get("/offer/:id", async (req, res) => {
   const { id } = req.params;
   const { token } = req.apiCredentials;
 
@@ -202,17 +206,17 @@ router.get('/offer/:id', async (req, res) => {
 
     return res.json(data);
   } catch (error) {
-    console.log('error', error.message);
+    console.log("error", error.message);
     if (error.response) {
       res.status(error.response.status);
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
 });
 
-router.post('/due-date', async (req, res) => {
+router.post("/due-date", async (req, res) => {
   const { propostaId, produtoId, tabelaJurosId } = req.body;
   const apiData = { propostaId, produtoId, tabelaJurosId };
   const { token } = req.apiCredentials;
@@ -236,11 +240,11 @@ router.post('/due-date', async (req, res) => {
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
 });
 
-router.post('/product-offer/:id', async (req, res) => {
+router.post("/product-offer/:id", async (req, res) => {
   const apiData = req.body;
   const { id } = req.params;
   const { token } = req.apiCredentials;
@@ -264,18 +268,18 @@ router.post('/product-offer/:id', async (req, res) => {
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
 });
 
-router.post('/product-offer/max-value/:id', async (req, res) => {
+router.post("/product-offer/max-value/:id", async (req, res) => {
   const apiData = req.body;
   const { token } = req.apiCredentials;
   const { id } = req.params;
 
-  if(!id) {
+  if (!id) {
     res.status(400);
-    return res.json({ message: 'Proposal ID is missing' });
+    return res.json({ message: "Proposal ID is missing" });
   }
 
   try {
@@ -297,12 +301,11 @@ router.post('/product-offer/max-value/:id', async (req, res) => {
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
+});
 
-})
-
-router.post('/update-proposal', async (req, res) => {
+router.post("/update-proposal", async (req, res) => {
   const apiData = req.body;
   const { token } = req.apiCredentials;
 
@@ -318,7 +321,6 @@ router.post('/update-proposal', async (req, res) => {
     );
 
     return res.json({ ok: true });
-
   } catch (error) {
     console.log(error);
     if (error.response) {
@@ -326,12 +328,11 @@ router.post('/update-proposal', async (req, res) => {
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
-  
 });
 
-router.post('/proposal/analyze/:id', async (req, res) => {
+router.post("/proposal/analyze/:id", async (req, res) => {
   const { id } = req.params;
   const { token } = req.apiCredentials;
 
@@ -341,12 +342,12 @@ router.post('/proposal/analyze/:id', async (req, res) => {
       nomeVendedor: process.env.CREFAZ_VENDOR_NAME,
       cpfVendedor: process.env.CREFAZ_VENDOR_CPF,
       celularVendedor: process.env.CREFAZ_VENDOR_PHONE,
-    }
-  }
+    },
+  };
 
-  if(!id) {
+  if (!id) {
     res.status(400);
-    return res.json({ message: 'Proposal ID is missing' });
+    return res.json({ message: "Proposal ID is missing" });
   }
 
   try {
@@ -361,7 +362,7 @@ router.post('/proposal/analyze/:id', async (req, res) => {
     );
 
     return res.json(data);
-  } catch (error) {    
+  } catch (error) {
     if (error.response) {
       res.status(error.response.status);
       console.log(error.response.data);
@@ -369,26 +370,28 @@ router.post('/proposal/analyze/:id', async (req, res) => {
     }
     console.log(error);
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
-})
+});
 
 router.post(
-  '/image/upload',
-  multer(multerConfig).array('images', 3),
+  "/image/upload",
+  multer(multerConfig).array("images", 3),
   async (req, res) => {
     const { files } = req;
     const fileInfo = { files, folderName: req.body.nome };
-    const date = new Date(new Date().toLocaleString('en', { timeZone: 'America/Sao_Paulo'}));
-    const today = new Intl.DateTimeFormat('pt-br', options).format(date);
+    const date = new Date(
+      new Date().toLocaleString("en", { timeZone: "America/Sao_Paulo" })
+    );
+    const today = new Intl.DateTimeFormat("pt-br", options).format(date);
 
-    const valor = req.body['valor']?.replace(/\D/g, '');
+    const valor = req.body["valor"]?.replace(/\D/g, "");
 
     const userData = {
-        ...req.body,
-        valor: valor,
-        timestamp: today,
-    }
+      ...req.body,
+      valor: valor,
+      timestamp: today,
+    };
 
     if (!files.length) {
       await googleSheetQueue.add(
@@ -403,23 +406,23 @@ router.post(
   }
 );
 
-router.post('/document/upload/:id', async (req, res) => {  
+router.post("/document/upload/:id", async (req, res) => {
   const { id } = req.params;
   const { conteudo, documentoId } = req.body;
   const apiData = { conteudo, documentoId };
   const { token } = req.apiCredentials;
 
-  if(!id) {
+  if (!id) {
     res.status(400);
-    return res.json({ message: 'Documento ID is missing' });
+    return res.json({ message: "Documento ID is missing" });
   }
 
-  if( !conteudo || !documentoId) {
+  if (!conteudo || !documentoId) {
     res.status(400);
-    return res.json({ message: 'Conteudo or documentoId is missing' });
+    return res.json({ message: "Conteudo or documentoId is missing" });
   }
 
-   try {
+  try {
     const { data } = await axios.put(
       `${process.env.CREFAZ_BASE_URL}/api/proposta/${id}/imagem`,
       apiData,
@@ -432,18 +435,18 @@ router.post('/document/upload/:id', async (req, res) => {
 
     return res.json(data);
   } catch (error) {
-    console.log(error);    
+    console.log(error);
     if (error.response) {
       res.status(error.response.status);
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
-})
+});
 
-router.post('/acompanhamento', async (req, res) => {
-  console.log('webhook', req.body);
+router.post("/acompanhamento", async (req, res) => {
+  console.log("webhook", req.body);
 
   return res.json({ ok: true });
 });
@@ -464,7 +467,7 @@ async function contaLuzGetValues({ propostaId }) {
 
     if (data.data) {
       const energyProd = data.data.produtos.find(
-        (prod) => prod.nome === 'Energia'
+        (prod) => prod.nome === "Energia"
       );
       const valueAvailable =
         energyProd.convenio[0].tabelaJuros[0].tabelaJurosValores[0];
@@ -479,16 +482,19 @@ async function contaLuzGetValues({ propostaId }) {
   }
 }
 
-router.get('/proposal/search/:id', async (req, res) => {
+router.get("/proposal/search/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     if (!id) {
       res.status(404);
-      return res.json({ message: 'Proposal not found!' });
+      return res.json({ message: "Proposal not found!" });
     }
 
-    const data = await searchProposalByID({ proposalID: id, token: req.apiCredentials.token });
+    const data = await searchProposalByID({
+      proposalID: id,
+      token: req.apiCredentials.token,
+    });
 
     if (data.success) {
       const resData = {
@@ -499,46 +505,49 @@ router.get('/proposal/search/:id', async (req, res) => {
       return res.json(resData);
     } else {
       res.status(404);
-      return res.json({ message: 'Proposal not found!' });
+      return res.json({ message: "Proposal not found!" });
     }
   } catch (error) {
     console.log(error);
     res.status(500);
-    return res.json({ error: 'Something went wrong' });
+    return res.json({ error: "Something went wrong" });
   }
 });
 
-router.get('/simulation/search/:id', async (req, res) => {
+router.get("/simulation/search/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     if (!id) {
       res.status(404);
-      return res.json({ message: 'Proposal not found!' });
+      return res.json({ message: "Proposal not found!" });
     }
 
-    const data = await searchProposalByID({ proposalID: id, token: req.apiCredentials.token });
+    const data = await searchProposalByID({
+      proposalID: id,
+      token: req.apiCredentials.token,
+    });
 
     if (data.success) {
       return res.json(data);
     } else {
       res.status(404);
-      return res.json({ message: 'Proposal not found!' });
+      return res.json({ message: "Proposal not found!" });
     }
   } catch (error) {
     console.log(error);
     res.status(500);
-    return res.json({ error: 'Something went wrong' });
+    return res.json({ error: "Something went wrong" });
   }
 });
 
-router.post('/state/cities', async (req, res) => {
+router.post("/state/cities", async (req, res) => {
   const { uf } = req.body;
   const { token } = req.apiCredentials;
 
   if (!uf) {
-    res.status(400);  
-    return res.json({ message: 'UF is required' });
+    res.status(400);
+    return res.json({ message: "UF is required" });
   }
 
   try {
@@ -560,13 +569,13 @@ router.post('/state/cities', async (req, res) => {
       return res.json(error.response.data);
     }
     res.status(400);
-    return res.json({ message: 'Error' });
+    return res.json({ message: "Error" });
   }
 });
 
-async function searchProposalByID({ proposalID = '', token }) {
+async function searchProposalByID({ proposalID = "", token }) {
   if (!token) {
-    return { success: false, data: { message: 'Token is required' } };
+    return { success: false, data: { message: "Token is required" } };
   }
 
   try {
@@ -586,33 +595,33 @@ async function searchProposalByID({ proposalID = '', token }) {
   }
 }
 
-router.post('/bot-message', async (req, res) => {
+router.post("/bot-message", async (req, res) => {
   const { first_name, last_name, phone, valueAvailable } = req.body;
 
   try {
     const msgSent = await sendBotAnaliseMessage({ userData: req.body });
     if (!msgSent.ok)
-      return res.status(400).json({ error: 'Unable to send message' });
-    return res.json({ message: 'Bot message sent' });
+      return res.status(400).json({ error: "Unable to send message" });
+    return res.json({ message: "Bot message sent" });
   } catch (error) {
     console.log(error);
-    return res.status(400).json({ error: 'Unable to send message' });
+    return res.status(400).json({ error: "Unable to send message" });
   }
 });
 
-router.post('/proposal/search-by-cpf', async (req, res) => {
+router.post("/proposal/search-by-cpf", async (req, res) => {
   const { cpf } = req.body;
 
   if (!cpf) {
     res.status(404);
-    return res.json({ message: 'Invalid CPF!' });
+    return res.json({ message: "Invalid CPF!" });
   }
 
   try {
     const data = await searchByCPF({ cpf, token: req.apiCredentials.token });
     if (!data.success) {
       res.status(404);
-      return res.json({ message: 'Something went wrong!' });
+      return res.json({ message: "Something went wrong!" });
     }
 
     const {
@@ -629,9 +638,9 @@ router.post('/proposal/search-by-cpf', async (req, res) => {
   }
 });
 
-async function searchByCPF({ cpf = '', token }) {
+async function searchByCPF({ cpf = "", token }) {
   if (!token) {
-    return { success: false, data: { message: 'Token is required' } };
+    return { success: false, data: { message: "Token is required" } };
   }
 
   const searchData = {
@@ -657,13 +666,111 @@ async function searchByCPF({ cpf = '', token }) {
   }
 }
 
-// async function verifyToken() {
-//   if (!apiCredentials?.token) {
-//     await getToken(apiCredentials);
-//   }
-//   const currentDay = new Date();
-//   const expiresDay = new Date(apiCredentials.expires);
-//   if (currentDay >= expiresDay) await getToken(apiCredentials);
-// }
+const energyTokenMiddleware = createEnergyTokenMiddleware();
+
+router.post(
+  "/proposal/energy/validate",
+  energyTokenMiddleware,
+  async (req, res) => {
+    const { token = "" } = req.crefazOnApiCredentials;
+    const { id, operacao } = req.body;
+
+    if (!id || !operacao) {
+      res.status(400);
+      return res.json({ message: "ID and operation are required" });
+    }
+
+    try {
+      const data = await updateEnergyDataForValidate(token, { id, operacao });
+      if (!data.success) {
+        res.json({
+          success: false,
+          data: { unidadeCorreta: false },
+          message: "Error updating energy data",
+        });
+        return;
+      }
+
+      const { integracaoCrivo } = data.data;
+
+      if (!integracaoCrivo) {
+        res.json({
+          success: false,
+          data: { unidadeCorreta: false },
+          message: "Invalid energy data",
+        });
+        return;
+      }
+
+      const validateData = await validateEnergyData(token, {
+        propostaId: id,
+        ...integracaoCrivo,
+      });
+
+      if (!validateData.success || validateData.data.unidadeCorreta === false) {
+        res.json({
+          success: true,
+          data: {
+            unidadeCorreta: validateData.data.unidadeCorreta,
+          },
+        });
+        return;
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          unidadeCorreta: validateData.data.unidadeCorreta,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(400);
+      return res.json({
+        success: false,
+        data: { unidadeCorreta: false },
+        message: "Error trying to validate energy data",
+      });
+    }
+  }
+);
+
+async function updateEnergyDataForValidate(token, energyData) {
+  const { id } = energyData;
+
+  try {
+    const { data } = await axios.put(
+      `${process.env.CREFAZ_ON_URL}/proposta/oferta-produto-consultar-crivo/${id}`,
+      energyData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return data;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
+
+async function validateEnergyData(token, energyData) {
+  try {
+    const { data } = await axios.post(
+      `${process.env.CREFAZ_ON_CRIVE_URL}/crivo/acionamento`,
+      energyData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return data;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
 
 module.exports = router;

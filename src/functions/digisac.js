@@ -2,10 +2,15 @@ const axios = require("axios");
 require("dotenv/config");
 const fs = require('fs');
 const path = require("path");
+const { scheduleMessageQueue } = require("../lib/Queue");
 
 const audioPath = path.join(__dirname, '../audios/audio.ogg');
 const audioBuffer = fs.readFileSync(audioPath);
 const audioBase64 = audioBuffer.toString('base64');
+
+const videoPath = path.join(__dirname, '../videos/crefaz.mp4');
+const videoBuffer = fs.readFileSync(videoPath);
+const videoBase64 = videoBuffer.toString('base64');
 
 const apiCredentials = {
   expires: "",
@@ -92,6 +97,23 @@ async function sendMessage(contact = {}) {
   }
 }
 
+async function sendVideoMessage(contact = {}) {
+  const reqData = {
+    serviceId: process.env.DIGISAC_SERVICE_ID,
+    number: (contact.telefone ?? "").replace(/\D/g, ""),
+    file: {
+      base64: videoBase64,
+      mimetype: "video/mp4"  
+    }
+  };
+  try {
+    const { data } = await digisacBaseApi.post("/messages", reqData);
+    return data;
+  } catch (error) {
+    console.log("ERROR TRYING SEND MESSAGE", error);
+  }
+}
+
 async function sendAudioMessage(contact = {}) {
   const reqData = {
     serviceId: process.env.DIGISAC_SERVICE_ID,
@@ -101,7 +123,6 @@ async function sendAudioMessage(contact = {}) {
       mimetype: "audio/mpeg"  
     }
   };
-
 
   try {
     const { data } = await digisacBaseApi.post("/messages", reqData);
@@ -154,10 +175,14 @@ async function sendMessageWithDigisac(contact = {}) {
   try {
     const contactId = await createContact(contact);
     await sendMessage(contact);
-    await sleep(50);
-    await sendSimpleMessage({ ...contact, message: secondMessage });
-    await sleep(50);
-    await sendSimpleMessage({ ...contact, message: thirdMessage });
+    scheduleMessageQueue.add(
+      { ...contact, message: secondMessage },
+      { delay: (1000 * 60 * 5), attempts: 2, backoff: 1000 * 20 } // 5 minutes
+    ); 
+    scheduleMessageQueue.add(
+      { ...contact, message: thirdMessage },
+      { delay: (1000 * 60 * 10), attempts: 2, backoff: 1000 * 20 } // 7 minutes
+    ); 
     if(contactId) await transferConversation(contactId)    
     return { ok: true };
   } catch (error) {
@@ -247,4 +272,6 @@ function formatWtsMessage(msgData = {}) {
 module.exports = {
   digisacBaseApi,
   sendMessageWithDigisac,
+  sendVideoMessage,
+  sendSimpleMessage,
 };

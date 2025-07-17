@@ -1,9 +1,8 @@
-const { uploadImageToDrive } = require('../lib/uploadImageToDrive');
+const { sendProposalStatusMessage } = require('../lib/sendProposalStatusMessage');
 
 module.exports = {
     key: 'proposalStatusMessageJob',
     async handle({ data }) {
-        const { fileInfo, userData, hasImage } = data;
-        await uploadImageToDrive({filesArray: fileInfo.files, folderName: fileInfo.folderName, userData });
+        await sendProposalStatusMessage(data);
     }
 }

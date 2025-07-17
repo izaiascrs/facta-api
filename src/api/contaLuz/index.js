@@ -5,6 +5,7 @@ const {
   uploadQueue,
   googleSheetQueue,
   updateUserQueue,
+  proposalStatusMessageQueue,
 } = require("../../lib/Queue");
 
 const multerConfig = require("../../config/multer");
@@ -19,6 +20,7 @@ const {
   sendProposalIDAndLinkMessage,
   sendSiteSimulationsMsg,
   sendBotAnaliseMessage,
+  searchProposalByID,
 } = require("../../functions/contaLuz");
 const {
   createEnergyTokenMiddleware,
@@ -163,9 +165,9 @@ router.post("/create-proposal", async (req, res) => {
   const cityID =
     cities[state]?.find((city) => city?.nome === userCity)?.id ?? 0;
   userData.citieID = cityID;
-  const { token } = req.apiCredentials;
+  const { token } = req.apiCredentials;  
 
-  const formattedData = normalizeData(userData);
+  const formattedData = normalizeData(userData, (req.userVersion ?? "v1"));
 
   try {
     const { data } = await axios.post(
@@ -446,7 +448,15 @@ router.post("/document/upload/:id", async (req, res) => {
 });
 
 router.post("/acompanhamento", async (req, res) => {
-  console.log("webhook", req.body);
+  console.log("@webhook/acompanhamento", req.body);
+
+  if(req.body?.situacaoDescricao === "Aguard. Assinatura") {
+    await proposalStatusMessageQueue.add({
+      token: req.apiCredentials.token,
+      propostaId: req.body?.propostaId,
+      status: req.body?.situacaoDescricao,
+    }, { attempts: 3, backoff: delay });
+  }
 
   return res.json({ ok: true });
 });
@@ -573,27 +583,6 @@ router.post("/state/cities", async (req, res) => {
   }
 });
 
-async function searchProposalByID({ proposalID = "", token }) {
-  if (!token) {
-    return { success: false, data: { message: "Token is required" } };
-  }
-
-  try {
-    const { data } = await axios.get(
-      `${process.env.CREFAZ_BASE_URL}/api/proposta/${proposalID}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    return data;
-  } catch (error) {
-    console.log(error.message);
-    return error;
-  }
-}
 
 router.post("/bot-message", async (req, res) => {
   const { first_name, last_name, phone, valueAvailable } = req.body;

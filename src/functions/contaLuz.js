@@ -194,19 +194,18 @@ function formatNumberAsCurrency(n) {
   });
 }
 
-function normalizeData(userInfoObj) {
+function normalizeData(userInfoObj, userVersion) {
+  const urlPath = `/api/conta-luz/${userVersion === "v1" ? "acompanhamento" : "v2/acompanhamento"}`;
   return {
     cpf: userInfoObj.cpf,
     nome: userInfoObj.nome,
     nascimento: userInfoObj.nascimento,
-    telefone: userInfoObj.telefone,
+    telefone: userInfoObj.telefone.replace(/\D/g, ""),
     ocupacaoId: userInfoObj.ocupacaoId,
     cidadeId: userInfoObj.citieID,
-    // "bairro": userInfoObj.bairro,
-    // "logradouro": userInfoObj.logradouro,
     cep: userInfoObj.cep,
     urlNotificacaoParceiro:
-      'https://smartwatchtec.com.br/api/conta-luz/acompanhamento',
+      `${process.env.WEBHOOK_BASE_URL}/${urlPath}`,
   };
 }
 
@@ -278,6 +277,28 @@ async function sendBotAnaliseMessage({ userData = {} }) {
   }
 }
 
+async function searchProposalByID({ proposalID = "", token }) {
+  if (!token) {
+    return { success: false, data: { message: "Token is required" } };
+  }
+
+  try {
+    const { data } = await axios.get(
+      `${process.env.CREFAZ_BASE_URL}/api/proposta/${proposalID}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return data;
+  } catch (error) {
+    console.log(error.message);
+    return error;
+  }
+}
+
 module.exports = {
   contaLuzCreateUser,
   contaLuzGetUserIdByPhone,
@@ -292,4 +313,5 @@ module.exports = {
   sendBotMessage,
   sendSiteSimulationsMsg,
   sendBotAnaliseMessage,
+  searchProposalByID,
 };

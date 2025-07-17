@@ -184,12 +184,8 @@ async function sendMessageWithDigisac(contact = {}) {
     ); 
     scheduleMessageQueue.add(
       { ...contact, message: thirdMessage },
-      { delay: (1000 * 60 * 10), attempts: 2, backoff: 1000 * 20 } // 10 minutes
-    ); 
-    // await sleep(50);
-    // await sendSimpleMessage({ ...contact, message: secondMessage });
-    // await sleep(50);
-    // await sendSimpleMessage({ ...contact, message: thirdMessage });
+      { delay: (1000 * 60 * 6), attempts: 2, backoff: 1000 * 20 } // 6 minutes
+    );     
     if(contactId) await transferConversation(contactId)    
     return { ok: true };
   } catch (error) {

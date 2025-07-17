@@ -2,7 +2,6 @@ const axios = require("axios");
 require("dotenv/config");
 const fs = require('fs');
 const path = require("path");
-const { scheduleMessageQueue } = require("../lib/Queue");
 
 const audioPath = path.join(__dirname, '../audios/audio.ogg');
 const audioBuffer = fs.readFileSync(audioPath);
@@ -175,14 +174,22 @@ async function sendMessageWithDigisac(contact = {}) {
   try {
     const contactId = await createContact(contact);
     await sendMessage(contact);
+    
+    // Lazy loading da fila para evitar dependência circular
+    const { scheduleMessageQueue } = require("../lib/Queue");
+    
     scheduleMessageQueue.add(
       { ...contact, message: secondMessage },
       { delay: (1000 * 60 * 5), attempts: 2, backoff: 1000 * 20 } // 5 minutes
     ); 
     scheduleMessageQueue.add(
       { ...contact, message: thirdMessage },
-      { delay: (1000 * 60 * 10), attempts: 2, backoff: 1000 * 20 } // 7 minutes
+      { delay: (1000 * 60 * 10), attempts: 2, backoff: 1000 * 20 } // 10 minutes
     ); 
+    // await sleep(50);
+    // await sendSimpleMessage({ ...contact, message: secondMessage });
+    // await sleep(50);
+    // await sendSimpleMessage({ ...contact, message: thirdMessage });
     if(contactId) await transferConversation(contactId)    
     return { ok: true };
   } catch (error) {

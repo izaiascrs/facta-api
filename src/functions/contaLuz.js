@@ -195,7 +195,7 @@ function formatNumberAsCurrency(n) {
 }
 
 function normalizeData(userInfoObj, userVersion) {
-  const urlPath = `/api/conta-luz/${userVersion === "v1" ? "acompanhamento" : "v2/acompanhamento"}`;
+  const urlPath = `api/conta-luz/${userVersion === "v1" ? "acompanhamento" : "v2/acompanhamento"}`;
   return {
     cpf: userInfoObj.cpf,
     nome: userInfoObj.nome,

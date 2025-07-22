@@ -131,7 +131,7 @@ async function sendAudioMessage(contact = {}) {
   }
 }
 
-async function sendSimpleMessage(contact = {}) {
+async function sendSimpleMessage(contact = { telefone: "", message: "" }) {
   const reqData = {
     type: "chat",
     serviceId: process.env.DIGISAC_SERVICE_ID,

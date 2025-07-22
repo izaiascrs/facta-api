@@ -165,9 +165,9 @@ router.post("/create-proposal", async (req, res) => {
   const cityID =
     cities[state]?.find((city) => city?.nome === userCity)?.id ?? 0;
   userData.citieID = cityID;
-  const { token } = req.apiCredentials;  
+  const { token } = req.apiCredentials;
 
-  const formattedData = normalizeData(userData, (req.userVersion ?? "v1"));
+  const formattedData = normalizeData(userData, req.userVersion ?? "v1");
 
   try {
     const { data } = await axios.post(
@@ -449,13 +449,21 @@ router.post("/document/upload/:id", async (req, res) => {
 
 router.post("/acompanhamento", async (req, res) => {
   console.log("@webhook/acompanhamento", req.body);
+  const { situacaoDescricao = "" } = req.body;
 
-  if(req.body?.situacaoDescricao === "Aguard. Assinatura") {
-    await proposalStatusMessageQueue.add({
-      token: req.apiCredentials.token,
-      propostaId: req.body?.propostaId,
-      status: req.body?.situacaoDescricao,
-    }, { attempts: 3, backoff: delay });
+  if (
+    situacaoDescricao === "Aguard. Assinatura" ||
+    situacaoDescricao === "Seleção Oferta"
+  ) {
+    await proposalStatusMessageQueue.add(
+      {
+        token: req.apiCredentials.token,
+        propostaId: req.body?.propostaId,
+        status: req.body?.situacaoDescricao,
+        userVersion: req?.userVersion,
+      },
+      { attempts: 3, backoff: delay }
+    );
   }
 
   return res.json({ ok: true });
@@ -582,7 +590,6 @@ router.post("/state/cities", async (req, res) => {
     return res.json({ message: "Error" });
   }
 });
-
 
 router.post("/bot-message", async (req, res) => {
   const { first_name, last_name, phone, valueAvailable } = req.body;

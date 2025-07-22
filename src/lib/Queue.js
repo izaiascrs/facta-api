@@ -92,6 +92,7 @@ proposalStatusMessageQueue.on("failed", (job, error) => {
 scheduleMessageQueue.on("completed", (job) => {
   console.log("schedule message completed!");
 });
+
 scheduleMessageQueue.on("failed", (job, error) => {
   console.log(error);
   console.log("schedule message failed!");

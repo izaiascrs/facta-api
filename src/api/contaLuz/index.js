@@ -453,7 +453,7 @@ router.post("/acompanhamento", async (req, res) => {
 
   if (
     situacaoDescricao === "Aguard. Assinatura" ||
-    situacaoDescricao === "Seleção Oferta"
+    situacaoDescricao === "Aguard. Análise"
   ) {
     await proposalStatusMessageQueue.add(
       {

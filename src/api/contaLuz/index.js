@@ -447,6 +447,30 @@ router.post("/document/upload/:id", async (req, res) => {
   }
 });
 
+router.post("/document/types", async (req, res) => {
+  const { token } = req.apiCredentials;
+  try {
+    const { data } = await axios.post(
+      `${process.env.CREFAZ_BASE_URL}/api/proposta/tipo-anexos`,
+      req.body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return res.json(data);
+  } catch (error) { 
+    console.log(error);
+    if (error.response) {
+      res.status(error.response.status);
+      return res.json(error.response.data);
+    }
+    res.status(400);
+    return res.json({ message: "Error" });
+  }
+});
+
 router.post("/acompanhamento", async (req, res) => {
   console.log("@webhook/acompanhamento", req.body);
   const { situacaoDescricao = "" } = req.body;

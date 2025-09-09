@@ -6,12 +6,11 @@ const sendSimulationMessage = process.env.SEND_SIMULATION_MESSAGE === 'true';
 
 const messageWaitingSignature = 
   "Excelente notícia!\n\n" +
-  "Sua análise foi aprovada e agora só falta a assinatura digital!\n" +
-  "Assista o vídeo explicativo e faça sua assinatura de forma rápida e segura. Seguem informações para acessar o aplicativo:\n\n" +
-  "Login: Seu CPF\n" +
-  "Senha: 6 primeiros dígitos do seu CPF\n\n" +
-  "Link App:\n\n" +
-  "https://play.google.com/store/apps/details?id=com.crefaz.meu_crefaz&hl=pt_BR&gl=US&pli=1\n\n" +
+  "Sua análise foi aprovada e agora só falta a assinatura digital!\n\n" +
+  "Assista o vídeo explicativo e faça sua assinatura de forma rápida e segura. Seguem informações para acessar: \n\n" +
+  "Link Google: https://webapp.crefazon.com.br/\n\n" +
+  "Login: CPF\n" +
+  "Senha: 6 primeiros dígitos do CPF\n\n" +
   "Se precisar de ajuda, entre em contato com a gente!";
 
 const messageWaitingAnalysis = 

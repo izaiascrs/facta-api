@@ -1,8 +1,9 @@
 require('dotenv').config();
 
-const { searchProposalByID } = require("../functions/contaLuz");
+const { searchProposalByID, getProposalOffers } = require("../functions/contaLuz");
 const { sendVideoMessage, sendSimpleMessage } = require("../functions/digisac");
 const sendSimulationMessage = process.env.SEND_SIMULATION_MESSAGE === 'true';
+
 
 const messageWaitingSignature = 
   "Excelente notícia!\n\n" +
@@ -19,13 +20,24 @@ const messageWaitingAnalysis =
   "Se preferir, você pode entrar em contato com a nossa equipe para acompanhar a verificação ou tirar qualquer dúvida.\n" +
   "Estamos à disposição para te ajudar! 😊";
 
+const cpAutoMessage = 
+  "Oi, tudo bem?\n\n" +
+  "*Sua análise foi concluída!*\n\n" +
+  "Neste momento, o crédito pela conta de luz não está disponível, mas temos uma excelente oportunidade para você!\n\n" +
+  "*Você foi pré-aprovado na modalidade refinanciamento de veículos!*\n\n" +
+  "Crédito facilitado com condições especiais e liberação rápida* 🚗💰\n\n" +
+  "*Com juros 4 vezes menor e valor liberado maior do que a modalidade de crédito na conta de luz. 🙌🏻*\n\n" +
+  "Posso te enviar uma simulação com essa oferta exclusiva? 😉\n\n" +
+  "*Oferta liberado por tempo limitado 🚀*"
+
 async function sendProposalStatusMessage(data = {}) {
   const { token, propostaId, status, userVersion } = data;
 
   console.log("@sendProposalStatusMessage", { propostaId, status, userVersion });
+  const validStatuses = ["Aguard. Assinatura", "Aguard. Análise", "Seleção Oferta"];
 
   if(!token || !propostaId) return;
-  if(status !== "Aguard. Assinatura" && status !== "Aguard. Análise") return;
+  if(!validStatuses.includes(status)) return;
   if(status === "Aguard. Análise" && userVersion !== "v2") return;
 
   const proposal = await searchProposalByID({ proposalID: propostaId, token });
@@ -41,6 +53,22 @@ async function sendProposalStatusMessage(data = {}) {
   if(!telefone) return;
 
   switch(status) {
+    case "Seleção Oferta":
+      // cp auto is a new product, so we need to send the message to the user since we don't have an api for now
+      const offers = await getProposalOffers({ proposalID: propostaId, token });
+      if(!offers || offers.success === false) return;
+      const products = offers.data.produtos ?? [];
+      
+      // if we have energy product, we don't need to send the message
+      const energyProduct = products.find(product => product.nome === "Energia");
+      if(energyProduct) return;
+
+      // check if we have cp auto product
+      const cpAutoProduct = products.find(product => product.nome === "CP Auto"); // vehicle refinancing CP Auto
+      if(!cpAutoProduct) return;
+      // for now use test phone
+      await sendSimpleMessage({ telefone: "55" + telefone, message: cpAutoMessage });
+      break;
     case "Aguard. Assinatura":
       await sendSimpleMessage({ telefone: "55" + telefone, message: messageWaitingSignature });
       await sendVideoMessage({ telefone: "55" + telefone });

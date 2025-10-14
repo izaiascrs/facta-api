@@ -186,7 +186,7 @@ async function sendMessageWithDigisac(contact = {}) {
       { ...contact, message: thirdMessage },
       { delay: (1000 * 60 * 2), attempts: 2, backoff: 1000 * 20 } // 2.3 minutes
     );     
-    if(contactId) await transferConversation(contactId)    
+    if(contactId) await transferConversation(contactId);
     return { ok: true };
   } catch (error) {
     console.log("ERROR", error?.message ?? error);

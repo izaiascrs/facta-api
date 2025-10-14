@@ -299,6 +299,27 @@ async function searchProposalByID({ proposalID = "", token }) {
   }
 }
 
+async function getProposalOffers({ proposalID = "", token }) {
+  if (!token) {
+    return { success: false, data: { message: "Token is required" } };
+  }
+  
+  try {
+    const { data } = await axios.get(
+      `${process.env.CREFAZ_BASE_URL}/api/proposta/oferta-produto/${proposalID}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return data;
+  } catch (error) {
+    console.log(error.message);
+    return error;
+  }
+}
+
 module.exports = {
   contaLuzCreateUser,
   contaLuzGetUserIdByPhone,
@@ -314,4 +335,5 @@ module.exports = {
   sendSiteSimulationsMsg,
   sendBotAnaliseMessage,
   searchProposalByID,
+  getProposalOffers,
 };

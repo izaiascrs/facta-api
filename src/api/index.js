@@ -16,8 +16,8 @@ router.get('/', (req, res) => {
 const contaLuzV1Middleware = createTokenMiddleware('v1');
 const contaLuzV2Middleware = createTokenMiddleware('v2');
 
-router.use('/conta-luz', contaLuzV1Middleware, contaLuzRouter);
 router.use('/conta-luz/v2', contaLuzV2Middleware, contaLuzRouter);
+router.use('/conta-luz', contaLuzV1Middleware, contaLuzRouter);
 router.use('/fgts', fgtsRouter);
 router.use('/consignado', consignadoRouter);
 router.use('/crefaz', crefazRouter);

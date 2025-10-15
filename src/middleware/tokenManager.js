@@ -27,13 +27,24 @@ const USER_CONFIGS = {
 };
 
 async function getToken(userTokens, userCredentials, userVersion) {
-  console.log("getToken....");
+  console.log(`getToken para ${userVersion}....`);
   
   try {
     const { data } = await axios.post(
       `${process.env.CREFAZ_BASE_URL}/api/usuario/login`,
       userCredentials
     );
+    
+    if (!data || !data.data || !data.data.token) {
+      console.error(`Resposta inválida da API para ${userVersion}:`, data);
+      // Limpa o cache de validação em caso de erro
+      validationCache[userVersion] = {
+        lastCheck: 0,
+        isValid: false
+      };
+      return false;
+    }
+    
     const expiresDay = data.data.expires.split('T')[0];
     userTokens.token = data.data.token;
     userTokens.expires = expiresDay.replace(/-/g, '/');
@@ -45,9 +56,15 @@ async function getToken(userTokens, userCredentials, userVersion) {
       isValid: true
     };
     
+    console.log(`Token obtido com sucesso para ${userVersion}`);
     return userTokens;
   } catch (error) {
-    console.log(error);
+    console.error(`Erro ao obter token para ${userVersion}:`, error.response?.data || error.message);
+    // Limpa o cache de validação em caso de erro
+    validationCache[userVersion] = {
+      lastCheck: 0,
+      isValid: false
+    };
     return false;
   }
 }
@@ -70,7 +87,7 @@ function isTokenValid(tokenData) {
 }
 
 /**
- * Middleware para gerenciar tokens de diferentes usuários
+ * Middleware para gerenciar tokens de diferentes usuários (sem fallback automático)
  * @param {string} userVersion - Versão do usuário (v1, v2, etc.)
  */
 function createTokenMiddleware(userVersion) {
@@ -96,12 +113,13 @@ function createTokenMiddleware(userVersion) {
         return next();
       }
       
-      // Se não tem token ou token expirado, faz login
+      // Se não tem token ou token expirado, faz login apenas para o usuário específico
       if (!isTokenValid(currentToken)) {
         const result = await getToken(currentToken, USER_CONFIGS[userVersion], userVersion);
         if (!result) {
-          return res.status(401).json({ 
-            error: 'Falha na autenticação' 
+          return res.status(500).json({ 
+            error: 'Internal server error',
+            code: 'AUTH_FAILED'
           });
         }
       }
@@ -112,16 +130,17 @@ function createTokenMiddleware(userVersion) {
       
       next();
     } catch (error) {
-      console.error('Erro no middleware de token:', error);
       return res.status(500).json({ 
-        error: 'Erro interno no gerenciamento de token' 
+        error: 'Internal server error',
+        code: 'AUTH_FAILED'
       });
     }
   };
 }
 
+
 /**
- * Função para obter token de um usuário específico
+ * Função para obter token de um usuário específico (mantida para compatibilidade)
  * @param {string} userVersion - Versão do usuário
  * @returns {Object} Credenciais do usuário
  */
@@ -135,7 +154,7 @@ async function getUserToken(userVersion) {
   if (!isTokenValid(currentToken)) {
     const result = await getToken(currentToken, USER_CONFIGS[userVersion], userVersion);
     if (!result) {
-      throw new Error('Falha na autenticação');
+      throw new Error('AUTH_FAILED');
     }
   }
 

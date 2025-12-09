@@ -144,7 +144,7 @@ async function sendSimpleMessage(contact = { telefone: "", message: "" }) {
     const { data } = await digisacBaseApi.post("/messages", reqData);
     return data;
   } catch (error) {
-    console.log("ERROR TRYING SEND MESSAGE", error);
+    console.log("ERROR TRYING SEND MESSAGE", error?.data ?? error);
   }
 }
 
@@ -272,9 +272,38 @@ function formatWtsMessage(msgData = {}) {
   return message;
 }
 
+async function getContactIdByPhone(phone = "") {
+  try {
+    const { data } = await digisacBaseApi.get(`/contacts?where[data.number]=${phone}`);
+    const total = data?.total ?? 0;
+    if(total < 1) return null;
+    return data.data[0]?.id;
+  } catch (error) {
+    console.log("ERROR TRYING GET CONTACT ID", error);
+    return null;
+  }
+}
+
+async function getContactMessagesByContactId(contactId = "") {
+  try {
+    const { data } = await digisacBaseApi.get(`/messages?where[contactId]=${contactId}`);
+    return data.data ?? [];
+  } catch (error) {
+    console.log("ERROR TRYING GET CONTACT MESSAGES BY CONTACT ID", error);
+    return [];
+  }
+}
+
+function checkIfContactHasRepliedMessage(messages = []) {
+  return messages.some(message => message.isFromMe === false && message.text !== null && message.text !== "");
+}
+
 module.exports = {
   digisacBaseApi,
   sendMessageWithDigisac,
   sendVideoMessage,
   sendSimpleMessage,
+  getContactIdByPhone,
+  getContactMessagesByContactId,
+  checkIfContactHasRepliedMessage,
 };

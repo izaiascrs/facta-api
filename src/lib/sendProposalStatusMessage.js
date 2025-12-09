@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const { searchProposalByID, getProposalOffers } = require("../functions/contaLuz");
-const { sendVideoMessage, sendSimpleMessage } = require("../functions/digisac");
+const { sendVideoMessage, sendSimpleMessage, getContactIdByPhone, getContactMessagesByContactId, checkIfContactHasRepliedMessage } = require("../functions/digisac");
 const sendSimulationMessage = process.env.SEND_SIMULATION_MESSAGE === 'true';
 
 
@@ -34,7 +34,7 @@ async function sendProposalStatusMessage(data = {}) {
   const { token, propostaId, status, userVersion } = data;
 
   console.log("@sendProposalStatusMessage", { propostaId, status, userVersion });
-  const validStatuses = ["Aguard. Assinatura", "Aguard. Análise", "Seleção Oferta"];
+  const validStatuses = ["Aguard. Assinatura", "Aguard. Análise", "Seleção Oferta", "Negada"];
 
   if(!token || !propostaId) return;
   if(!validStatuses.includes(status)) return;
@@ -52,7 +52,25 @@ async function sendProposalStatusMessage(data = {}) {
 
   if(!telefone) return;
 
+  const formattedPhone = "55" + telefone;
+
   switch(status) {
+    case "Negada":
+      // only send the message if the contact has replied to the message
+      const motivo = proposta?.motivo ?? [];
+      const motivoMessage = new Set(motivo.map(item => item.nome ?? ""));
+      if(motivoMessage.size > 0) {
+        // check if the contact exists in digisac
+        const contactId = await getContactIdByPhone(formattedPhone);
+        if(!contactId) return;
+        // check if the contact has replied to the message
+        const messages = await getContactMessagesByContactId(contactId);
+        if(!checkIfContactHasRepliedMessage(messages)) return;
+        // send the message to the contact
+        const message = Array.from(motivoMessage).join("\n");
+        await sendSimpleMessage({ telefone: formattedPhone, message: message });
+      }
+      break;
     case "Seleção Oferta":
       // cp auto is a new product, so we need to send the message to the user since we don't have an api for now
       const offers = await getProposalOffers({ proposalID: propostaId, token });
@@ -67,15 +85,15 @@ async function sendProposalStatusMessage(data = {}) {
       const cpAutoProduct = products.find(product => product.nome === "CP Auto"); // vehicle refinancing CP Auto
       if(!cpAutoProduct) return;
       // for now use test phone
-      await sendSimpleMessage({ telefone: "55" + telefone, message: cpAutoMessage });
+      await sendSimpleMessage({ telefone: formattedPhone, message: cpAutoMessage });
       break;
     case "Aguard. Assinatura":
-      await sendSimpleMessage({ telefone: "55" + telefone, message: messageWaitingSignature });
-      await sendVideoMessage({ telefone: "55" + telefone });
+      await sendSimpleMessage({ telefone: formattedPhone, message: messageWaitingSignature });
+      await sendVideoMessage({ telefone: formattedPhone });
       break;
     case "Aguard. Análise":
       if(!sendSimulationMessage) return;
-      await sendSimpleMessage({ telefone: "55" + telefone, message: messageWaitingAnalysis });
+      await sendSimpleMessage({ telefone: formattedPhone, message: messageWaitingAnalysis });
       break;
     default:
       break;

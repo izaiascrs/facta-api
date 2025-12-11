@@ -52,7 +52,7 @@ async function sendProposalStatusMessage(data = {}) {
 
   if(!telefone) return;
 
-  const formattedPhone = "55" + telefone;
+  let formattedPhone = "55" + String(telefone).replace(/\D/g, "");
 
   switch(status) {
     case "Negada":
@@ -61,8 +61,19 @@ async function sendProposalStatusMessage(data = {}) {
       const motivoMessage = new Set(motivo.map(item => item.nome ?? ""));
       if(motivoMessage.size > 0) {
         // check if the contact exists in digisac
-        const contactId = await getContactIdByPhone(formattedPhone);
-        if(!contactId) return;
+        let contactId = await getContactIdByPhone(formattedPhone);
+        if(!contactId) {
+          // if the phone number has less than 13 digits, it means it doesn't have a 9 after the DDD
+          if(formattedPhone.length < 13) return;
+          // remove the 9 from the phone number after DDD
+          formattedPhone = "55" + String(telefone).replace(/^\d{3}/, (match) => {
+            // match includes ddd and 9 after it
+            const lastDigit = match.slice(-1);
+            return lastDigit === "9" ? match.slice(0, -1) : match;
+          });
+          contactId = await getContactIdByPhone(formattedPhone);
+          if(!contactId) return;
+        }
         // check if the contact has replied to the message
         const messages = await getContactMessagesByContactId(contactId);
         if(!checkIfContactHasRepliedMessage(messages)) return;

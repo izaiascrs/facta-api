@@ -34,7 +34,7 @@ async function sendProposalStatusMessage(data = {}) {
   const { token, propostaId, status, userVersion } = data;
 
   console.log("@sendProposalStatusMessage", { propostaId, status, userVersion });
-  const validStatuses = ["Aguard. Assinatura", "Aguard. Análise", "Seleção Oferta", "Negada"];
+  const validStatuses = ["Aguard. Assinatura"]; // "Aguard. Análise", "Seleção Oferta", "Negada" 
 
   if(!token || !propostaId) return;
   if(!validStatuses.includes(status)) return;

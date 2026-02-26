@@ -80,7 +80,7 @@ router.post("/user/create", async (req, res) => {
 });
 
 router.post("/user/create-v2", async (req, res) => {
-  const { phone, userMessageObj } = req.body;
+  const { phone, userMessageObj, sourcePage = "" } = req.body;
   const Telefone = phone?.replace("+", "") || "N/A";
 
   const messageSent = await sendSiteSimulationsMsg({
@@ -88,6 +88,7 @@ router.post("/user/create-v2", async (req, res) => {
       ...userMessageObj,
       Telefone,
       telefone_formatado: userMessageObj.Telefone,
+      sourcePage
     },
   });
 

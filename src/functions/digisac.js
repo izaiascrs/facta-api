@@ -253,7 +253,9 @@ function formatContactRequest(contact = {}) {
 }
 
 function formatWtsMessage(msgData = {}) {
-  let message = "Olá, obrigado por realizar a simulação no nosso site!\n";
+  const isNewPage = String(msgData?.sourcePage || "")?.includes("emprestimo-na-conta-de-luz");
+  const referer = isNewPage ? "na CrediConfiance!" : "no nosso site!"
+  let message = `Olá, obrigado por realizar a simulação ${referer}\n`;
   message += "Seus dados Cadastrados\n";
   message += `Nome: ${msgData.nome}\n`;
   message += `CPF: ${msgData.cpf}\n`;

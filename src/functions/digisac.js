@@ -267,6 +267,7 @@ function formatWtsMessage(msgData = {}) {
   if (msgData.banco) message += `Banco: ${msgData.banco}\n`;
   if (msgData.instalacao) message += `Código Energia: ${msgData.instalacao}\n`;
   if (msgData.lote) message += `nLote/Rota: ${msgData.lote}\n`;
+  if(msgData.produto) message += `Produto: ${msgData.produto}\n`
   message += "Confira seus dados para evitar erros na simulação.\n";
   message +=
     "Importante: Informações inconsistentes irão cancelar a simulação!\n";

@@ -1,8 +1,17 @@
 const { default: axios } = require("axios");
 const express = require("express");
 const { normalizeSimulationData } = require("../../utils/conta-luz");
+const { createTokenMiddleware: createTokenMiddlewareV2  } = require('../../middleware/tokenManagerV2');
 
 const router = express.Router();
+const tokenMiddleware = createTokenMiddlewareV2();
+
+router.post("/webhook", (req, res) => {
+  console.log("[WEBHOOK DATA]: ", req.body);  
+  return res.status(200).json({ ok: true })
+});
+
+router.use(tokenMiddleware);
 
 router.get("/", (req, res) => {
   res.json({ ok: true });

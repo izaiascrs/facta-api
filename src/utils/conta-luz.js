@@ -25,7 +25,7 @@ function normalizeSimulationData(data = {}) {
       cidadeId: cidadeId,
     },
     operacao: {
-      urlNotificacao: "https://n8n.applify.com.br/webhook/crefaz",
+      urlNotificacao: "https://api.crediconfiance.com.br/api/luz/webhook",
     },
   };
 }

@@ -174,18 +174,23 @@ async function sendMessageWithDigisac(contact = {}) {
   try {
     const contactId = await createContact(contact);
     await sendMessage(contact);
-    
-    // Lazy loading da fila para evitar dependência circular
-    const { scheduleMessageQueue } = require("../lib/Queue");
-    
-    scheduleMessageQueue.add(
-      { ...contact, message: secondMessage },
-      { delay: (1000 * 60 * 1.5), attempts: 2, backoff: 1000 * 20 } // 2 minutes
-    ); 
-    scheduleMessageQueue.add(
-      { ...contact, message: thirdMessage },
-      { delay: (1000 * 60 * 2), attempts: 2, backoff: 1000 * 20 } // 2.3 minutes
-    );     
+    const validProduct = contact.produto 
+      && typeof contact.produto === 'string' 
+      && (/energia/gi).test(contact.produto);
+
+    if(validProduct) {
+      // Lazy loading da fila para evitar dependência circular
+      const { scheduleMessageQueue } = require("../lib/Queue");
+      
+      scheduleMessageQueue.add(
+        { ...contact, message: secondMessage },
+        { delay: (1000 * 60 * 1.5), attempts: 2, backoff: 1000 * 20 } // 2 minutes
+      ); 
+      scheduleMessageQueue.add(
+        { ...contact, message: thirdMessage },
+        { delay: (1000 * 60 * 2), attempts: 2, backoff: 1000 * 20 } // 2.3 minutes
+      );     
+    }
     if(contactId) await transferConversation(contactId);
     return { ok: true };
   } catch (error) {

@@ -176,4 +176,29 @@ router.post("/analyze/proposal/:id/product-offer/:productId", async(req, res) =>
   }
 });
 
+router.get('/analyze/process/:id', async(req, res) => {
+  const { token } = req.apiCredentials;
+  const { id } = req.params;
+
+  try {
+    const { data } = await axios.get(
+      `${process.env.CREFAZ_BASE_URL_V2}/propostas/processamento/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return res.json(data);
+  } catch (error) {
+    console.log(error.message);
+    if (error.response) {
+      res.status(error.response.status);
+      return res.json(error.response.data);
+    }
+    res.status(400);
+    return res.json({ message: "Error" });
+  }
+})
+
 module.exports = router;

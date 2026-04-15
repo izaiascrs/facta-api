@@ -127,11 +127,11 @@ async function sendUserInfoMessage({
 }
 
 async function sendSiteSimulationsMsg({ messageObj = {} }) {
-  const valor_formatado = messageObj['Valor'] || 900;
+  const valor_formatado = messageObj['Valor'] || undefined;
 
   const msgData = {
     ...messageObj,
-    valor: formatNumberAsCurrency(valor_formatado),
+    valor: valor_formatado ? formatNumberAsCurrency(valor_formatado) : undefined,
     cpf: messageObj['CPF'] || 'N/A',
     nome: messageObj['Nome'] || 'N/A',
     nascimento: messageObj['Data Nascimento'] || 'N/A',
@@ -140,7 +140,7 @@ async function sendSiteSimulationsMsg({ messageObj = {} }) {
     cep: messageObj['CEP'] || 'N/A',
     estado: messageObj['Estado'] || 'N/A',
     cidade: messageObj['Cidade'] || 'N/A',
-    cia: messageObj['Companhia'] || 'N/A',
+    cia: messageObj['Companhia'] || undefined,
     telefone: messageObj['Telefone'] || 'N/A',
     tipo_fluxo: SIMULACAO,
   };
